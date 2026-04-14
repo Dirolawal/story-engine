@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Story Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:         #09090f;
+      --surface:    #111118;
+      --surface2:   #1a1a24;
+      --border:     rgba(255,255,255,0.07);
+      --border-hover: rgba(255,255,255,0.15);
+      --text:       #f0f0f5;
+      --muted:      #6b6b80;
+      --accent:     #7c3aed;
+      --accent-glow: rgba(124,58,237,0.25);
+
+      --hook:   #9333ea;
+      --pain:   #ef4444;
+      --relate: #f59e0b;
+      --shift:  #10b981;
+      --value:  #3b82f6;
+      --proof:  #06b6d4;
+      --cta:    #ec4899;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── HEADER ─────────────────────────────── */
+    .header {
+      padding: 28px 20px 0;
+      text-align: center;
+    }
+    .header-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .logo-mark {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, #7c3aed, #ec4899);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .logo-text {
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #c084fc, #f9a8d4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .header-tagline {
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+    }
+
+    /* ── MAIN CONTAINER ─────────────────────── */
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 32px 16px 80px;
+    }
+
+    /* ── MODE TOGGLE ────────────────────────── */
+    .mode-toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 4px;
+      margin-bottom: 28px;
+    }
+    .mode-btn {
+      padding: 12px 16px;
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+    }
+    .mode-btn:hover { color: var(--text); }
+    .mode-btn.active {
+      background: var(--surface2);
+      color: var(--text);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+    .mode-btn .icon { font-size: 16px; }
+
+    /* ── PANEL ──────────────────────────────── */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* ── CARD ───────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .card-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    /* ── INPUTS ─────────────────────────────── */
+    input[type="text"],
+    textarea {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      padding: 13px 15px;
+      outline: none;
+      transition: border-color 0.2s;
+      resize: none;
+    }
+    input[type="text"]::placeholder,
+    textarea::placeholder { color: var(--muted); }
+    input[type="text"]:focus,
+    textarea:focus { border-color: var(--accent); }
+    textarea { min-height: 130px; line-height: 1.6; }
+
+    /* ── SLIDER ─────────────────────────────── */
+    .slider-container {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .slider-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .slider-value {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text);
+      min-width: 28px;
+      text-align: right;
+    }
+    input[type="range"] {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 4px;
+      border-radius: 4px;
+      background: var(--surface2);
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #7c3aed, #ec4899);
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(124,58,237,0.5);
+      border: 2px solid var(--bg);
+    }
+    .slider-ticks {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--muted);
+      padding: 0 2px;
+    }
+
+    /* ── BUTTONS ────────────────────────────── */
+    .btn {
+      width: 100%;
+      padding: 15px 20px;
+      border-radius: 12px;
+      border: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #7c3aed, #9d46ff);
+      color: white;
+      box-shadow: 0 4px 20px rgba(124,58,237,0.35);
+    }
+    .btn-primary:hover:not(:disabled) {
+      box-shadow: 0 6px 28px rgba(124,58,237,0.5);
+      transform: translateY(-1px);
+    }
+    .btn-primary:active:not(:disabled) { transform: translateY(0); }
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .btn-secondary {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { border-color: var(--border-hover); }
+    .btn-sm {
+      width: auto;
+      padding: 7px 12px;
+      font-size: 12px;
+      border-radius: 8px;
+      font-weight: 600;
+    }
+
+    /* ── IDEA CARDS ─────────────────────────── */
+    .ideas-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    @media (min-width: 480px) {
+      .ideas-grid { grid-template-columns: 1fr 1fr; }
+    }
+    .idea-card {
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .idea-card:hover { border-color: var(--border-hover); background: #1e1e2c; }
+    .idea-card.selected {
+      border-color: var(--accent);
+      background: rgba(124,58,237,0.1);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+    .idea-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 5px;
+    }
+    .idea-hook {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+      font-style: italic;
+    }
+    .idea-angle {
+      font-size: 11px;
+      color: #4b5563;
+      margin-top: 6px;
+    }
+
+    /* ── LOADING ────────────────────────────── */
+    .loading-state {
+      display: none;
+      text-align: center;
+      padding: 48px 20px;
+    }
+    .loading-state.visible { display: block; }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--surface2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text {
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .loading-sub {
+      font-size: 12px;
+      color: #3a3a4a;
+      margin-top: 6px;
+    }
+
+    /* ── STORY OUTPUT ───────────────────────── */
+    .story-output { display: none; }
+    .story-output.visible { display: block; }
+
+    .output-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .output-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .output-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* ── SLIDE CARDS ────────────────────────── */
+    .slide-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .slide-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .slide-type-badge {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+    .type-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+    }
+    .slide-number {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .slide-body {
+      padding: 16px;
+    }
+    .slide-headline {
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1.3;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+    .slide-copy {
+      font-size: 14px;
+      line-height: 1.65;
+      color: #c0c0d0;
+      margin-bottom: 12px;
+    }
+    .slide-direction {
+      display: flex;
+      align-items: flex-start;
+      gap: 7px;
+      background: var(--surface2);
+      border-radius: 8px;
+      padding: 9px 11px;
+      margin-bottom: 12px;
+    }
+    .direction-icon { font-size: 12px; opacity: 0.7; flex-shrink: 0; margin-top: 1px; }
+    .direction-text {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+      font-style: italic;
+    }
+    .slide-copy-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 7px 13px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      width: 100%;
+      justify-content: center;
+    }
+    .slide-copy-btn:hover { border-color: var(--border-hover); color: var(--text); }
+    .slide-copy-btn.copied {
+      border-color: #10b981;
+      color: #10b981;
+      background: rgba(16,185,129,0.08);
+    }
+
+    /* type accent bars */
+    .slide-card[data-type="hook"]   { border-left: 3px solid var(--hook); }
+    .slide-card[data-type="pain"]   { border-left: 3px solid var(--pain); }
+    .slide-card[data-type="relate"] { border-left: 3px solid var(--relate); }
+    .slide-card[data-type="shift"]  { border-left: 3px solid var(--shift); }
+    .slide-card[data-type="value"]  { border-left: 3px solid var(--value); }
+    .slide-card[data-type="proof"]  { border-left: 3px solid var(--proof); }
+    .slide-card[data-type="cta"]    { border-left: 3px solid var(--cta); }
+
+    /* type badge colours */
+    .badge-hook   { color: var(--hook); }
+    .badge-pain   { color: var(--pain); }
+    .badge-relate { color: var(--relate); }
+    .badge-shift  { color: var(--shift); }
+    .badge-value  { color: var(--value); }
+    .badge-proof  { color: var(--proof); }
+    .badge-cta    { color: var(--cta); }
+
+    .dot-hook   { background: var(--hook); }
+    .dot-pain   { background: var(--pain); }
+    .dot-relate { background: var(--relate); }
+    .dot-shift  { background: var(--shift); }
+    .dot-value  { background: var(--value); }
+    .dot-proof  { background: var(--proof); }
+    .dot-cta    { background: var(--cta); }
+
+    /* ── ERROR ──────────────────────────────── */
+    .error-msg {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 13px;
+      color: #fca5a5;
+      display: none;
+      margin-top: 12px;
+    }
+    .error-msg.visible { display: block; }
+
+    /* ── COPY ALL BANNER ────────────────────── */
+    .copy-all-banner {
+      position: sticky;
+      bottom: 16px;
+      margin-top: 20px;
+    }
+    .btn-copy-all {
+      background: linear-gradient(135deg, #1a1a24, #222230);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 14px 20px;
+      border-radius: 12px;
+      cursor: pointer;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+    .btn-copy-all:hover { border-color: var(--border-hover); }
+    .btn-copy-all.copied {
+      border-color: #10b981;
+      color: #10b981;
+      background: rgba(16,185,129,0.08);
+    }
+
+    /* ── DIVIDER ────────────────────────────── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 20px 0;
+    }
+
+    /* ── RESET LINK ─────────────────────────── */
+    .reset-link {
+      text-align: center;
+      margin-top: 24px;
+    }
+    .reset-link button {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .reset-link button:hover { color: var(--text); }
+
+    /* ── SCROLLBAR ──────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 3px; }
+
+    /* ── TYPE LEGEND ────────────────────────── */
+    .type-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .legend-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-logo">
+    <div class="logo-mark">✦</div>
+    <span class="logo-text">Story Engine</span>
+  </div>
+  <p class="header-tagline">Instagram story scripts for Creative Directors</p>
+</header>
+
+<main class="container">
+
+  <!-- MODE TOGGLE -->
+  <div class="mode-toggle" role="tablist">
+    <button class="mode-btn active" id="btn-inspire" onclick="switchMode('inspire')" role="tab">
+      <span class="icon">✨</span> Inspire Me
+    </button>
+    <button class="mode-btn" id="btn-braindump" onclick="switchMode('braindump')" role="tab">
+      <span class="icon">🧠</span> Brain Dump
+    </button>
+  </div>
+
+  <!-- INSPIRE ME PANEL -->
+  <div class="panel active" id="panel-inspire">
+
+    <!-- Step 1: Topic input -->
+    <div id="inspire-step1">
+      <div class="card">
+        <div class="card-label">What's your story about?</div>
+        <input
+          type="text"
+          id="inspire-topic"
+          placeholder="e.g. why most brand audits fail clients, the truth about creative burnout…"
+          autocomplete="off"
+          onkeydown="if(event.key==='Enter') getIdeas()"
+        />
+        <div class="error-msg" id="inspire-error"></div>
+      </div>
+      <button class="btn btn-primary" onclick="getIdeas()" id="btn-get-ideas">
+        <span id="ideas-btn-text">Get 6 Story Angles</span>
+      </button>
+    </div>
+
+    <!-- Step 2: Idea selection -->
+    <div id="inspire-step2" style="display:none">
+      <div class="card">
+        <div class="card-label">Pick your angle</div>
+        <div class="ideas-grid" id="ideas-grid"></div>
+        <input
+          type="text"
+          id="inspire-custom"
+          placeholder="Or type your own angle…"
+          autocomplete="off"
+          style="margin-top:8px"
+        />
+      </div>
+
+      <!-- Slide length slider -->
+      <div class="card">
+        <div class="slider-label-row">
+          <div class="card-label" style="margin-bottom:0">Story length</div>
+          <span class="slider-value" id="inspire-length-val">7</span>
+        </div>
+        <div class="slider-container">
+          <span style="font-size:12px;color:var(--muted)">4</span>
+          <input type="range" id="inspire-slider" min="4" max="10" value="7"
+            oninput="document.getElementById('inspire-length-val').textContent=this.value" />
+          <span style="font-size:12px;color:var(--muted)">10</span>
+        </div>
+        <div class="slider-ticks">
+          <span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+        </div>
+        <div class="type-legend" id="inspire-legend" style="margin-top:12px"></div>
+      </div>
+
+      <button class="btn btn-primary" onclick="generateScript('inspire')" id="btn-gen-inspire">
+        Generate Script
+      </button>
+      <div style="margin-top:10px">
+        <button class="btn btn-secondary" onclick="resetInspire()">← Back to topic</button>
+      </div>
+    </div>
+
+  </div><!-- /inspire -->
+
+  <!-- BRAIN DUMP PANEL -->
+  <div class="panel" id="panel-braindump">
+    <div class="card">
+      <div class="card-label">Your raw thoughts</div>
+      <textarea
+        id="braindump-input"
+        placeholder="Paste or type your unpolished ideas, bullet points, rambling thoughts — anything. We'll shape it into a story."
+      ></textarea>
+      <div class="error-msg" id="braindump-error"></div>
+    </div>
+
+    <!-- Slide length slider -->
+    <div class="card">
+      <div class="slider-label-row">
+        <div class="card-label" style="margin-bottom:0">Story length</div>
+        <span class="slider-value" id="braindump-length-val">7</span>
+      </div>
+      <div class="slider-container">
+        <span style="font-size:12px;color:var(--muted)">4</span>
+        <input type="range" id="braindump-slider" min="4" max="10" value="7"
+          oninput="document.getElementById('braindump-length-val').textContent=this.value" />
+        <span style="font-size:12px;color:var(--muted)">10</span>
+      </div>
+      <div class="slider-ticks">
+        <span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+      </div>
+      <div class="type-legend" id="braindump-legend" style="margin-top:12px"></div>
+    </div>
+
+    <button class="btn btn-primary" onclick="generateScript('braindump')" id="btn-gen-braindump">
+      Generate Script
+    </button>
+  </div><!-- /braindump -->
+
+  <!-- LOADING STATE -->
+  <div class="loading-state" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loading-text">Crafting your story…</div>
+    <div class="loading-sub">This takes 15–30 seconds</div>
+  </div>
+
+  <!-- STORY OUTPUT -->
+  <div class="story-output" id="story-output">
+    <div class="output-header">
+      <div class="output-title">Your Story Script</div>
+      <div class="output-actions">
+        <button class="btn btn-secondary btn-sm" onclick="resetAll()">New Story</button>
+      </div>
+    </div>
+    <div id="slides-container"></div>
+    <div class="copy-all-banner">
+      <button class="btn-copy-all" id="btn-copy-all" onclick="copyAll()">
+        <span>⧉</span> Copy All Slides
+      </button>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let currentMode = 'inspire';
+let selectedAngle = null;
+let currentSlides = [];
+
+const TYPE_META = {
+  hook:   { label: 'Hook',   emoji: '🎣', color: '#9333ea' },
+  pain:   { label: 'Pain',   emoji: '🔥', color: '#ef4444' },
+  relate: { label: 'Relate', emoji: '🤝', color: '#f59e0b' },
+  shift:  { label: 'Shift',  emoji: '↗️', color: '#10b981' },
+  value:  { label: 'Value',  emoji: '💎', color: '#3b82f6' },
+  proof:  { label: 'Proof',  emoji: '✅', color: '#06b6d4' },
+  cta:    { label: 'CTA',    emoji: '📲', color: '#ec4899' },
+};
+
+const SLIDE_PLANS = {
+  4:  ['hook','pain','value','cta'],
+  5:  ['hook','pain','relate','value','cta'],
+  6:  ['hook','pain','relate','shift','value','cta'],
+  7:  ['hook','pain','relate','shift','value','proof','cta'],
+  8:  ['hook','pain','relate','shift','value','value','proof','cta'],
+  9:  ['hook','pain','relate','relate','shift','value','value','proof','cta'],
+  10: ['hook','pain','relate','relate','shift','value','value','proof','proof','cta'],
+};
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  updateLegend('inspire');
+  updateLegend('braindump');
+
+  document.getElementById('inspire-slider').addEventListener('input', () => updateLegend('inspire'));
+  document.getElementById('braindump-slider').addEventListener('input', () => updateLegend('braindump'));
+});
+
+function updateLegend(panel) {
+  const slider = document.getElementById(`${panel}-slider`);
+  const legend = document.getElementById(`${panel}-legend`);
+  const plan = SLIDE_PLANS[parseInt(slider.value)] || SLIDE_PLANS[7];
+  const unique = [...new Set(plan)];
+  legend.innerHTML = unique.map(t => {
+    const m = TYPE_META[t];
+    return `<div class="legend-item">
+      <div class="legend-dot" style="background:${m.color}"></div>
+      <span>${m.label}</span>
+    </div>`;
+  }).join('');
+}
+
+// ─── MODE SWITCH ──────────────────────────────────────────────────────────────
+function switchMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`btn-${mode}`).classList.add('active');
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`panel-${mode}`).classList.add('active');
+  hideOutput();
+  hideLoading();
+}
+
+// ─── INSPIRE: GET IDEAS ───────────────────────────────────────────────────────
+async function getIdeas() {
+  const topic = document.getElementById('inspire-topic').value.trim();
+  const errEl = document.getElementById('inspire-error');
+  errEl.classList.remove('visible');
+
+  if (!topic) {
+    errEl.textContent = 'Please enter a topic first.';
+    errEl.classList.add('visible');
+    return;
+  }
+
+  const btn = document.getElementById('btn-get-ideas');
+  const btnText = document.getElementById('ideas-btn-text');
+  btn.disabled = true;
+  btnText.textContent = 'Generating ideas…';
+
+  try {
+    const res = await fetch('/api/inspire', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topic }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Request failed');
+    }
+
+    const { ideas } = await res.json();
+    renderIdeas(ideas);
+
+    document.getElementById('inspire-step1').style.display = 'none';
+    document.getElementById('inspire-step2').style.display = 'block';
+    selectedAngle = null;
+  } catch (err) {
+    errEl.textContent = err.message || 'Something went wrong. Try again.';
+    errEl.classList.add('visible');
+  } finally {
+    btn.disabled = false;
+    btnText.textContent = 'Get 6 Story Angles';
+  }
+}
+
+function renderIdeas(ideas) {
+  const grid = document.getElementById('ideas-grid');
+  grid.innerHTML = '';
+  ideas.forEach((idea, i) => {
+    const card = document.createElement('div');
+    card.className = 'idea-card';
+    card.id = `idea-${i}`;
+    card.innerHTML = `
+      <div class="idea-title">${escHtml(idea.title)}</div>
+      <div class="idea-hook">"${escHtml(idea.hook)}"</div>
+      <div class="idea-angle">${escHtml(idea.angle)}</div>
+    `;
+    card.onclick = () => selectIdea(i, idea);
+    grid.appendChild(card);
+  });
+}
+
+function selectIdea(i, idea) {
+  document.querySelectorAll('.idea-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById(`idea-${i}`).classList.add('selected');
+  selectedAngle = idea.title + ' — ' + idea.hook;
+  document.getElementById('inspire-custom').value = '';
+}
+
+function resetInspire() {
+  document.getElementById('inspire-step1').style.display = 'block';
+  document.getElementById('inspire-step2').style.display = 'none';
+  selectedAngle = null;
+}
+
+// ─── GENERATE SCRIPT ─────────────────────────────────────────────────────────
+async function generateScript(mode) {
+  let input = '';
+
+  if (mode === 'inspire') {
+    const custom = document.getElementById('inspire-custom').value.trim();
+    input = custom || selectedAngle;
+    if (!input) {
+      alert('Please select an angle or type your own.');
+      return;
+    }
+  } else {
+    input = document.getElementById('braindump-input').value.trim();
+    if (!input) {
+      const errEl = document.getElementById('braindump-error');
+      errEl.textContent = 'Please add some thoughts first.';
+      errEl.classList.add('visible');
+      setTimeout(() => errEl.classList.remove('visible'), 3000);
+      return;
+    }
+  }
+
+  const length = parseInt(document.getElementById(
+    mode === 'inspire' ? 'inspire-slider' : 'braindump-slider'
+  ).value);
+
+  // Show loading
+  document.getElementById(`panel-${mode}`).style.display = 'none';
+  hideOutput();
+  showLoading(mode === 'braindump'
+    ? 'Transforming your thoughts…'
+    : 'Writing your story…'
+  );
+
+  try {
+    const response = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode, input, length }),
+    });
+
+    if (!response.ok) throw new Error('Server error');
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let slides = null;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      const lines = buffer.split('\n');
+      buffer = lines.pop(); // keep incomplete line
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6).trim();
+        if (raw === '[DONE]') continue;
+
+        try {
+          const event = JSON.parse(raw);
+          if (event.type === 'complete') {
+            slides = event.slides;
+          } else if (event.type === 'error') {
+            throw new Error(event.message);
+          }
+        } catch (e) {
+          if (e.message !== 'Unexpected token' && !e.message.includes('JSON')) {
+            throw e;
+          }
+        }
+      }
+    }
+
+    if (!slides || slides.length === 0) {
+      throw new Error('No slides returned — please try again');
+    }
+
+    hideLoading();
+    renderStory(slides);
+  } catch (err) {
+    hideLoading();
+    document.getElementById(`panel-${mode}`).style.display = 'block';
+    alert('Error: ' + (err.message || 'Something went wrong. Please try again.'));
+  }
+}
+
+// ─── RENDER STORY ────────────────────────────────────────────────────────────
+function renderStory(slides) {
+  currentSlides = slides;
+  const container = document.getElementById('slides-container');
+  container.innerHTML = '';
+
+  slides.forEach((slide, i) => {
+    const type = (slide.type || 'value').toLowerCase();
+    const meta = TYPE_META[type] || TYPE_META.value;
+    const card = document.createElement('div');
+    card.className = 'slide-card';
+    card.dataset.type = type;
+    card.innerHTML = `
+      <div class="slide-header">
+        <div class="slide-type-badge badge-${type}">
+          <div class="type-dot dot-${type}"></div>
+          ${meta.emoji} ${meta.label}
+        </div>
+        <span class="slide-number">Slide ${i + 1} of ${slides.length}</span>
+      </div>
+      <div class="slide-body">
+        <div class="slide-headline">${escHtml(slide.headline || '')}</div>
+        <div class="slide-copy">${escHtml(slide.body || '')}</div>
+        ${slide.direction ? `
+        <div class="slide-direction">
+          <span class="direction-icon">🎬</span>
+          <span class="direction-text">${escHtml(slide.direction)}</span>
+        </div>` : ''}
+        <button class="slide-copy-btn" onclick="copySlide(${i}, this)">
+          <span>⧉</span> Copy Slide
+        </button>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+
+  const output = document.getElementById('story-output');
+  output.classList.add('visible');
+  output.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById('btn-copy-all').classList.remove('copied');
+}
+
+// ─── COPY ────────────────────────────────────────────────────────────────────
+function copySlide(index, btn) {
+  const slide = currentSlides[index];
+  if (!slide) return;
+  const type = (slide.type || 'value').toUpperCase();
+  const text = `[${type}]\n${slide.headline}\n\n${slide.body}${slide.direction ? '\n\n🎬 ' + slide.direction : ''}`;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.classList.add('copied');
+    btn.innerHTML = '<span>✓</span> Copied!';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = '<span>⧉</span> Copy Slide';
+    }, 2000);
+  });
+}
+
+function copyAll() {
+  if (currentSlides.length === 0) return;
+  const text = currentSlides.map((slide, i) => {
+    const type = (slide.type || 'value').toUpperCase();
+    return `── SLIDE ${i + 1}: ${type} ──\n${slide.headline}\n\n${slide.body}${slide.direction ? '\n\n🎬 ' + slide.direction : ''}`;
+  }).join('\n\n');
+
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('btn-copy-all');
+    btn.classList.add('copied');
+    btn.innerHTML = '<span>✓</span> All Slides Copied!';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = '<span>⧉</span> Copy All Slides';
+    }, 2500);
+  });
+}
+
+// ─── RESET ───────────────────────────────────────────────────────────────────
+function resetAll() {
+  hideOutput();
+  currentSlides = [];
+  selectedAngle = null;
+
+  // Reset inspire flow
+  document.getElementById('inspire-step1').style.display = 'block';
+  document.getElementById('inspire-step2').style.display = 'none';
+  document.getElementById('inspire-topic').value = '';
+  document.getElementById('inspire-error').classList.remove('visible');
+
+  // Reset braindump
+  document.getElementById('braindump-input').value = '';
+
+  // Show current panel
+  document.getElementById(`panel-${currentMode}`).style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ─── UI HELPERS ──────────────────────────────────────────────────────────────
+function showLoading(text = 'Crafting your story…') {
+  document.getElementById('loading-text').textContent = text;
+  document.getElementById('loading').classList.add('visible');
+}
+function hideLoading() {
+  document.getElementById('loading').classList.remove('visible');
+}
+function hideOutput() {
+  document.getElementById('story-output').classList.remove('visible');
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+</script>
+</body>
+</html>
