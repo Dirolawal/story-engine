@@ -171,6 +171,26 @@ input[type=range].vslider::-moz-range-thumb{
 .vslider-reset{background:none;border:none;cursor:pointer;color:var(--muted);font-size:9px;font-family:'Space Grotesk',sans-serif;font-weight:700;padding:3px;border-radius:3px;line-height:1;transition:color .15s;text-align:center;letter-spacing:.02em}
 .vslider-reset:hover{color:var(--orange)}
 
+/* draggable canvas cursor */
+#previewCanvas{cursor:grab;touch-action:none}
+#previewCanvas.dragging{cursor:grabbing}
+
+/* snap guides */
+.snap-guide{position:absolute;pointer-events:none;opacity:0;transition:opacity .1s;background:rgba(255,255,255,.5)}
+.snap-guide.h{left:0;right:0;height:1px;top:50%}
+.snap-guide.v{top:0;bottom:0;width:1px;left:50%}
+.snap-guide.show{opacity:1}
+
+/* Open in Instagram / Copy button */
+.btn-ig{background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);color:#fff;border:none}
+.btn-ig:hover{opacity:.88;box-shadow:0 4px 20px rgba(253,29,29,.4)}
+.btn-copy-ig{background:var(--surface2);border:1.5px solid var(--border2);color:var(--cream)}
+.btn-copy-ig:hover{border-color:var(--orange);color:var(--orange)}
+
+/* toast */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface3);border:1px solid var(--border2);color:var(--cream);font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;padding:10px 18px;border-radius:20px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .2s,transform .2s;z-index:9999}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
 /* customization panel */
 .custom-panel{display:flex;flex-direction:column;gap:14px}
 .custom-section-label{font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
@@ -457,6 +477,8 @@ function defaultCustom(slide) {
     headline: slide?.headline || '',
     body: slide?.body || '',
     textScale: 1.0,
+    dragX: null,  // null = use position preset; 0.0–1.0 = fraction of canvas W
+    dragY: null,  // null = use position preset; 0.0–1.0 = fraction of canvas H
     font: 'space',
     headlineSize: 88,
     headlineWeight: 800,
@@ -787,9 +809,9 @@ function renderDesign() {
   const presets = loadPresets();
   const presetChips = presets.length ? presets.map(p=>`
     <div class="preset-chip">
-      <span class="preset-chip-name" onclick="applyPreset('${escAttr(p.name)}')" title="Apply to this slide">${esc(p.name)}</span>
+      <span class="preset-chip-name" onclick="applyPreset('${escAttr(p.name)}')" title="Tap to apply to this slide">${esc(p.name)}</span>
       <div class="pchip-actions">
-        <button class="pchip-btn" onclick="applyPresetAll('${escAttr(p.name)}')" title="Apply to all slides">All</button>
+        <button class="pchip-btn" onclick="applyPresetAll('${escAttr(p.name)}')" title="Apply to ALL slides">All</button>
         <button class="pchip-btn del" onclick="deletePreset('${escAttr(p.name)}')" title="Delete">✕</button>
       </div>
     </div>`).join('') : '<span class="preset-empty">No presets yet — save one below.</span>';
@@ -831,8 +853,10 @@ function renderDesign() {
             <button class="vslider-reset" onclick="resetTextScale()" title="Reset size">↺</button>
           </div>
           <!-- Canvas -->
-          <div class="canvas-container" id="canvasWrap">
+          <div class="canvas-container" id="canvasWrap" style="position:relative">
             <canvas id="previewCanvas"></canvas>
+            <div class="snap-guide h" id="snap-h"></div>
+            <div class="snap-guide v" id="snap-v"></div>
           </div>
         </div>
       </div>
@@ -1013,13 +1037,163 @@ function renderDesign() {
     </div><!-- end studio-layout -->
 
     <div class="export-bar">
-      <button class="btn btn-dl" onclick="downloadSlide(${S.activeSlide})">⬇ This Slide</button>
-      <button class="btn btn-dl-all" onclick="downloadAll()">⬇ Download All (${S.slides.length})</button>
-    </div>`;
+      <button class="btn btn-dl" onclick="downloadSlide(${S.activeSlide})">⬇ Save</button>
+      ${isMobile()
+        ? `<button class="btn btn-ig" onclick="openInInstagram(${S.activeSlide})">▶ Open in Instagram</button>`
+        : `<button class="btn btn-copy-ig" onclick="copyForInstagram(${S.activeSlide})">⧉ Copy for Instagram</button>`}
+      <button class="btn btn-dl-all" onclick="downloadAll()">⬇ All (${S.slides.length})</button>
+    </div>
+    <div class="toast" id="toast"></div>`;
 }
 
 function initDesign() {
-  document.fonts.ready.then(()=>renderCanvas());
+  document.fonts.ready.then(()=>{
+    renderCanvas();
+    initDrag();
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MOBILE DETECT + INSTAGRAM
+// ═══════════════════════════════════════════════════════════════
+function isMobile() {
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+}
+
+function showToast(msg, duration=2800) {
+  const t = document.getElementById('toast');
+  if(!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.classList.remove('show'), duration);
+}
+
+async function _slideBlob(idx) {
+  await document.fonts.ready;
+  const canvas = await renderCanvas(true, idx);
+  if(!canvas) return null;
+  return new Promise(res => canvas.toBlob(res, 'image/png'));
+}
+
+async function openInInstagram(idx) {
+  const blob = await _slideBlob(idx);
+  if(!blob) return;
+  // Write image to clipboard as a fallback reference, then try deep link
+  // Instagram Stories deep link requires the image to be shared via native share sheet
+  if(navigator.share && navigator.canShare && navigator.canShare({files:[new File([blob],'slide.png',{type:'image/png'})]})) {
+    try {
+      await navigator.share({
+        files: [new File([blob], `${S.topicSlug}-${idx+1}.png`, {type:'image/png'})],
+        title: 'Story Slide',
+      });
+      return;
+    } catch(e) {
+      if(e.name==='AbortError') return; // user cancelled
+    }
+  }
+  // Fallback: save + deep link
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `${S.topicSlug}-${idx+1}.png`; a.click();
+  setTimeout(()=>{ window.location.href = 'instagram://story-camera'; }, 800);
+  showToast('Image saved — paste it into Instagram Stories');
+}
+
+async function copyForInstagram(idx) {
+  const blob = await _slideBlob(idx);
+  if(!blob) return;
+  try {
+    await navigator.clipboard.write([new ClipboardItem({'image/png': blob})]);
+    showToast('Copied! Save the image and upload to Instagram Stories');
+  } catch(e) {
+    // Clipboard API blocked — fall back to download
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download=`${S.topicSlug}-${idx+1}.png`; a.click();
+    showToast('Image saved — upload it to Instagram Stories');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DRAGGABLE TEXT ON CANVAS
+// ═══════════════════════════════════════════════════════════════
+const SNAP_THRESH = 0.06; // fraction of canvas dimension
+
+function initDrag() {
+  const canvas = document.getElementById('previewCanvas');
+  if(!canvas) return;
+
+  let dragging = false;
+  let startClientX, startClientY, startDragX, startDragY;
+
+  function getXY(e) {
+    const t = e.touches ? e.touches[0] : e;
+    return {cx: t.clientX, cy: t.clientY};
+  }
+
+  function canvasFrac(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)),
+      y: Math.max(0, Math.min(1, (clientY - rect.top)  / rect.height)),
+    };
+  }
+
+  function onStart(e) {
+    const custom = S.customizations[S.activeSlide];
+    const {cx, cy} = getXY(e);
+    const {x, y} = canvasFrac(cx, cy);
+
+    // Only start drag if pointer is near the text block
+    const textY = custom.dragY !== null ? custom.dragY : (custom.position==='top'?0.1 : custom.position==='bottom'?0.8 : 0.5);
+    if(Math.abs(y - textY) > 0.35) return; // too far from text
+
+    dragging = true;
+    startClientX = cx; startClientY = cy;
+    startDragX = custom.dragX !== null ? custom.dragX : 0.09;
+    startDragY = custom.dragY !== null ? custom.dragY : textY;
+    canvas.classList.add('dragging');
+    e.preventDefault();
+  }
+
+  function onMove(e) {
+    if(!dragging) return;
+    const {cx, cy} = getXY(e);
+    const rect = canvas.getBoundingClientRect();
+    const dx = (cx - startClientX) / rect.width;
+    const dy = (cy - startClientY) / rect.height;
+
+    let nx = Math.max(0, Math.min(1, startDragX + dx));
+    let ny = Math.max(0, Math.min(1, startDragY + dy));
+
+    // Snap to centre
+    const snapH = document.getElementById('snap-h');
+    const snapV = document.getElementById('snap-v');
+    const nearCX = Math.abs(nx - 0.5) < SNAP_THRESH;
+    const nearCY = Math.abs(ny - 0.5) < SNAP_THRESH;
+    if(nearCX) { nx = 0.5; snapV?.classList.add('show'); } else { snapV?.classList.remove('show'); }
+    if(nearCY) { ny = 0.5; snapH?.classList.add('show'); } else { snapH?.classList.remove('show'); }
+
+    S.customizations[S.activeSlide].dragX = nx;
+    S.customizations[S.activeSlide].dragY = ny;
+    renderCanvas();
+    e.preventDefault();
+  }
+
+  function onEnd() {
+    if(!dragging) return;
+    dragging = false;
+    canvas.classList.remove('dragging');
+    document.getElementById('snap-h')?.classList.remove('show');
+    document.getElementById('snap-v')?.classList.remove('show');
+  }
+
+  canvas.addEventListener('mousedown',  onStart, {passive:false});
+  canvas.addEventListener('touchstart', onStart, {passive:false});
+  window.addEventListener('mousemove',  onMove,  {passive:false});
+  window.addEventListener('touchmove',  onMove,  {passive:false});
+  window.addEventListener('mouseup',    onEnd);
+  window.addEventListener('touchend',   onEnd);
 }
 
 function setActiveSlide(i) {
@@ -1197,23 +1371,37 @@ async function renderCanvas(forExport=false, slideIdx=null) {
   const sepH=Math.round(30*SF);
   const totalH=headLines.length*lineH+sepH+bodyLines.length*bodyLineH;
 
-  let startY;
-  if(custom.position==='top') startY=H*0.1;
-  else if(custom.position==='bottom') startY=H-totalH-H*0.1;
-  else startY=(H-totalH)/2;
+  // Determine text block origin — drag position overrides preset
+  let startY, textPadX;
+  if(custom.dragY !== null && custom.dragY !== undefined) {
+    // dragY is fraction of canvas H representing the *centre* of the text block
+    startY = custom.dragY * H - totalH / 2;
+    startY = Math.max(0, Math.min(H - totalH, startY));
+  } else {
+    if(custom.position==='top') startY=H*0.1;
+    else if(custom.position==='bottom') startY=H-totalH-H*0.1;
+    else startY=(H-totalH)/2;
+  }
+  if(custom.dragX !== null && custom.dragX !== undefined) {
+    textPadX = custom.dragX * W;
+    textPadX = Math.max(padX*0.5, Math.min(W - padX*0.5, textPadX));
+  } else {
+    textPadX = padX;
+  }
+  const textMaxW = W - textPadX - padX;
 
   // 5. Headline
-  let curY=drawTextLines(ctx,headLines,custom.wordFormats,startY,padX,maxW,W,
+  let curY=drawTextLines(ctx,headLines,custom.wordFormats,startY,textPadX,textMaxW,W,
     custom.headlineColor||'#F5F0E8',custom.headlineWeight||800,
     headSize,fontFam,lineH,custom.headlineAlign||'left',shadow);
 
   // 6. Separator bar
   ctx.fillStyle='#FF6B00';
-  ctx.fillRect(padX,curY+Math.round(8*SF),Math.round(70*SF),Math.round(3*SF));
+  ctx.fillRect(textPadX,curY+Math.round(8*SF),Math.round(70*SF),Math.round(3*SF));
   curY+=sepH;
 
   // 7. Body
-  drawTextLines(ctx,bodyLines,custom.wordFormats,curY,padX,maxW,W,
+  drawTextLines(ctx,bodyLines,custom.wordFormats,curY,textPadX,textMaxW,W,
     custom.bodyColor||'#C8C0B0',custom.bodyWeight||400,
     bodySize,fontFam,bodyLineH,custom.bodyAlign||'left',shadow);
 
