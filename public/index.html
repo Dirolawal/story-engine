@@ -323,6 +323,7 @@ const S = {
   topicSlug: 'story',
   selectedWord: null,
   hlColor: '#FF6B00', // active highlight colour in the word panel
+  hlCaps: false,      // caps-lock toggle for word highlight
   length: 7,
   slides: [],
   bgDataURL: null,
@@ -925,7 +926,12 @@ function renderDesign() {
           <div class="panel-section-body">
             <div>
               <div class="ctrl-label" style="margin-bottom:7px">Pick a colour, then tap words to highlight</div>
-              <div class="swatch-row">${swatchHtml}</div>
+              <div class="swatch-row">
+                ${swatchHtml}
+                <button id="btn-caps-toggle" class="weight-btn${S.hlCaps?' selected':''}" onclick="toggleHlCaps()"
+                  title="${S.hlCaps?'Caps ON — click to turn off':'Toggle ALL CAPS for highlighted words'}"
+                  style="width:auto;padding:4px 8px;border-radius:6px;font-size:11px;letter-spacing:.04em;margin-left:4px">AA</button>
+              </div>
             </div>
             <div class="hl-word-zone" id="hl-word-zone">${wordZoneHtml||'<span style="color:var(--muted);font-size:12px">Add text above first</span>'}</div>
             <div class="hl-actions">
@@ -999,13 +1005,13 @@ function updateColor(key, val) {
 
 // Word highlight — new persistent-panel model
 function hlWord(clean) {
-  // Tap a word: if already highlighted with same colour → remove, else apply current hlColor
   const wf = S.customizations[S.activeSlide].wordFormats;
   const existing = wf[clean];
-  if(existing && existing.color===S.hlColor) {
+  // Remove if already has same colour AND same caps state; otherwise apply/update
+  if(existing && existing.color===S.hlColor && !!existing.caps===S.hlCaps) {
     delete wf[clean];
   } else {
-    wf[clean] = {color: S.hlColor, weight: 700};
+    wf[clean] = {color: S.hlColor, weight: 700, caps: S.hlCaps};
   }
   // Re-render only the word zone + canvas, not the whole panel
   _refreshWordZone();
@@ -1013,11 +1019,18 @@ function hlWord(clean) {
 }
 function setHlColor(color) {
   S.hlColor = color;
-  // Update swatch active state in-place
   document.querySelectorAll('.swatch').forEach(s=>{
     s.classList.toggle('active', s.dataset.color===color);
   });
   document.querySelectorAll('.hl-custom-input').forEach(el=>el.value=color);
+}
+function toggleHlCaps() {
+  S.hlCaps = !S.hlCaps;
+  const btn = document.getElementById('btn-caps-toggle');
+  if(btn){
+    btn.classList.toggle('selected', S.hlCaps);
+    btn.title = S.hlCaps ? 'Caps ON — click to turn off' : 'Toggle ALL CAPS for highlighted words';
+  }
 }
 function clearAllHighlights() {
   S.customizations[S.activeSlide].wordFormats = {};
@@ -1039,8 +1052,9 @@ function _buildWordZoneHtml() {
     if(!clean||seen.has(clean)) return '';
     seen.add(clean);
     const fmt = custom.wordFormats[clean];
-    const style = fmt ? `color:${fmt.color};font-weight:${fmt.weight||700};` : '';
-    return `<span class="hltoken${fmt?' is-hl':''}" style="${style}" onclick="hlWord('${escAttr(clean)}')">${esc(w)}</span> `;
+    const style = fmt ? `color:${fmt.color};font-weight:${fmt.weight||700};${fmt.caps?'text-transform:uppercase;letter-spacing:.05em;':''}` : '';
+    const display = fmt?.caps ? w.toUpperCase() : esc(w);
+    return `<span class="hltoken${fmt?' is-hl':''}" style="${style}" onclick="hlWord('${escAttr(clean)}')">${display}</span> `;
   }).join('');
 }
 async function autoHighlight() {
@@ -1057,7 +1071,7 @@ async function autoHighlight() {
     if(Array.isArray(words)) {
       words.forEach(w=>{
         const clean = w.replace(/[^a-zA-Z0-9']/g,'').toLowerCase();
-        if(clean) custom.wordFormats[clean]={color:S.hlColor, weight:700};
+        if(clean) custom.wordFormats[clean]={color:S.hlColor, weight:700, caps:S.hlCaps};
       });
     }
     _refreshWordZone();
@@ -1174,10 +1188,11 @@ function drawTextLines(ctx,lines,wordFormats,startY,padX,maxW,W,defaultColor,def
       const fmt=wordFormats?.[clean]||{};
       const weight=fmt.weight||defaultWeight;
       const color=fmt.color||defaultColor;
+      const drawn=fmt.caps ? word.toUpperCase() : word;
       ctx.font=`${weight} ${fontSize}px ${fontFam}`;
       ctx.fillStyle=color;
-      ctx.fillText(word,curX,curY+fontSize);
-      curX+=ctx.measureText(word+' ').width;
+      ctx.fillText(drawn,curX,curY+fontSize);
+      curX+=ctx.measureText(drawn+' ').width;
     }
     curY+=lineH;
   }
