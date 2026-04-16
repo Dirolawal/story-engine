@@ -259,6 +259,34 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:3px}
 .toggle-track::before{position:absolute;content:'';height:14px;width:14px;left:3px;bottom:3px;background:var(--muted);border-radius:50%;transition:.2s}
 .toggle-sw input:checked+.toggle-track{background:var(--orange)}
 .toggle-sw input:checked+.toggle-track::before{transform:translateX(18px);background:#000}
+
+/* ── PRESETS ── */
+.preset-strip{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.preset-strip::-webkit-scrollbar{display:none}
+.preset-chip{flex-shrink:0;display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border:1.5px solid var(--border);border-radius:20px;padding:5px 8px 5px 11px;font-size:11px;font-weight:600;color:var(--cream2);cursor:pointer;transition:all .15s;white-space:nowrap;max-width:160px}
+.preset-chip:hover{border-color:var(--border2);color:var(--cream)}
+.preset-chip-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pchip-actions{display:flex;align-items:center;gap:2px;flex-shrink:0}
+.pchip-btn{background:none;border:none;cursor:pointer;font-size:10px;padding:2px 3px;border-radius:3px;color:var(--muted);transition:all .1s;line-height:1;font-family:'Space Grotesk',sans-serif}
+.pchip-btn:hover{color:var(--cream);background:var(--surface3)}
+.pchip-btn.del:hover{color:#EF4444}
+.preset-save-row{display:flex;gap:6px;align-items:center}
+.preset-save-row input[type=text]{padding:7px 10px;font-size:12px;height:34px}
+.preset-save-btn{flex-shrink:0;padding:7px 12px;font-size:12px;height:34px;background:var(--surface2);border:1.5px solid var(--border2);color:var(--cream);border-radius:7px;font-family:'Space Grotesk',sans-serif;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap}
+.preset-save-btn:hover{border-color:var(--orange);color:var(--orange)}
+.preset-empty{font-size:11px;color:var(--muted);font-style:italic}
+
+/* ── WORD HIGHLIGHT PANEL ── */
+.swatch-row{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.swatch{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2.5px solid transparent;transition:all .12s;flex-shrink:0;outline:none}
+.swatch:hover{transform:scale(1.12)}
+.swatch.active{border-color:#fff;box-shadow:0 0 0 1.5px rgba(255,255,255,.3);transform:scale(1.18)}
+.swatch-custom-wrap{display:flex;align-items:center;gap:4px;margin-left:2px}
+.hl-word-zone{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;line-height:2.5;min-height:56px}
+.hltoken{display:inline;cursor:pointer;border-radius:3px;padding:2px 3px;transition:background .1s,color .1s;font-size:12px;color:var(--cream2);font-weight:400}
+.hltoken:hover{background:rgba(255,255,255,.08)}
+.hltoken.is-hl{font-weight:700}
+.hl-actions{display:flex;gap:6px;flex-wrap:wrap}
 </style>
 </head>
 <body>
@@ -294,14 +322,67 @@ const S = {
   braindumpText: '',
   topicSlug: 'story',
   selectedWord: null,
+  hlColor: '#FF6B00', // active highlight colour in the word panel
   length: 7,
   slides: [],
   bgDataURL: null,
   bgIsVideo: false,
-  bgEl: null,        // img or video element
+  bgEl: null,
   activeSlide: 0,
-  customizations: [], // per-slide CustomState
+  customizations: [],
 };
+
+// ═══════════════════════════════════════════════════════════════
+// PRESETS  (localStorage-backed)
+// ═══════════════════════════════════════════════════════════════
+const PRESET_KEY = 'se_presets_v1';
+
+function loadPresets() {
+  try { return JSON.parse(localStorage.getItem(PRESET_KEY)||'[]'); } catch(e){ return []; }
+}
+function savePresets(arr) {
+  localStorage.setItem(PRESET_KEY, JSON.stringify(arr));
+}
+
+// Extract the style-only portion of a customization (no text content, no wordFormats)
+function customToPreset(custom) {
+  const {headline, body, wordFormats, ...style} = custom;
+  return style;
+}
+
+function savePreset() {
+  const input = document.getElementById('preset-name-input');
+  const name = (input?.value||'').trim();
+  if(!name) { input?.focus(); return; }
+  const presets = loadPresets();
+  // Overwrite if same name
+  const existing = presets.findIndex(p=>p.name===name);
+  const style = customToPreset(S.customizations[S.activeSlide]);
+  if(existing>=0) presets[existing] = {name, style};
+  else presets.push({name, style});
+  savePresets(presets);
+  if(input) input.value='';
+  render();
+}
+
+function applyPreset(name) {
+  const preset = loadPresets().find(p=>p.name===name);
+  if(!preset) return;
+  Object.assign(S.customizations[S.activeSlide], preset.style);
+  render();
+}
+
+function applyPresetAll(name) {
+  const preset = loadPresets().find(p=>p.name===name);
+  if(!preset) return;
+  S.customizations.forEach(c=>Object.assign(c, preset.style));
+  render();
+}
+
+function deletePreset(name) {
+  savePresets(loadPresets().filter(p=>p.name!==name));
+  render();
+}
 
 const NICHES = [
   {id:'content-creator', label:'Content Creator', icon:'🎥'},
@@ -677,40 +758,29 @@ function renderDesign() {
     </div>`;
   }).join('');
 
-  // Word tokens (headline + body, unique cleaned words)
-  const rawWords = ((custom.headline||'')+' '+(custom.body||'')).split(/\s+/).filter(Boolean);
-  const seenClean = new Set();
-  const wordTokensHtml = rawWords.map(w=>{
-    const clean = w.replace(/[^a-zA-Z0-9']/g,'').toLowerCase();
-    if(!clean || seenClean.has(clean)) return '';
-    seenClean.add(clean);
-    const fmt = custom.wordFormats[clean];
-    const style = fmt?.color ? `color:${fmt.color};` : '';
-    const isHL = !!fmt;
-    const isSel = S.selectedWord===clean;
-    return `<span class="wtoken${isHL?' w-highlighted':''}${isSel?' w-selected':''}" style="${style}" onclick="selectWord('${escAttr(clean)}')">${esc(w)}</span> `;
-  }).join('');
+  // Presets
+  const presets = loadPresets();
+  const presetChips = presets.length ? presets.map(p=>`
+    <div class="preset-chip">
+      <span class="preset-chip-name" onclick="applyPreset('${escAttr(p.name)}')" title="Apply to this slide">${esc(p.name)}</span>
+      <div class="pchip-actions">
+        <button class="pchip-btn" onclick="applyPresetAll('${escAttr(p.name)}')" title="Apply to all slides">All</button>
+        <button class="pchip-btn del" onclick="deletePreset('${escAttr(p.name)}')" title="Delete">✕</button>
+      </div>
+    </div>`).join('') : '<span class="preset-empty">No presets yet — save one below.</span>';
 
-  // Selected word format panel
-  const selFmt = S.selectedWord ? (custom.wordFormats[S.selectedWord]||{}) : null;
-  const wordFmtHtml = S.selectedWord ? `
-    <div class="word-fmt">
-      <div style="font-size:11px;color:var(--cream);font-weight:600;margin-bottom:4px">Editing: <span style="color:var(--orange)">"${esc(S.selectedWord)}"</span></div>
-      <div class="color-row">
-        <span class="ctrl-label">Color</span>
-        <input type="color" value="${selFmt.color||'#FF6B00'}" oninput="setWordFmt('color',this.value)"/>
-        <span class="color-hex">${selFmt.color||'#FF6B00'}</span>
-      </div>
-      <div>
-        <div class="ctrl-label" style="margin-bottom:5px">Weight</div>
-        <div class="weight-grid">
-          ${[{v:400,l:'Reg'},{v:500,l:'Med'},{v:700,l:'Bold'},{v:900,l:'Black'}].map(w=>
-            `<div class="weight-btn${(selFmt.weight||700)===w.v?' selected':''}" onclick="setWordFmt('weight',${w.v})">${w.l}</div>`
-          ).join('')}
-        </div>
-      </div>
-      <button class="btn btn-ghost btn-sm" onclick="clearWordFmt()" style="font-size:11px">✕ Remove</button>
-    </div>` : `<p style="font-size:11px;color:var(--muted);font-style:italic;margin:0">Click any word above to change its colour or weight.</p>`;
+  // Highlight colour swatches
+  const SWATCHES = ['#FF6B00','#F5F0E8','#FFFFFF','#EF4444','#F59E0B','#10B981','#3B82F6','#9333EA'];
+  const swatchHtml = SWATCHES.map(c=>
+    `<span class="swatch${S.hlColor===c?' active':''}" data-color="${c}" style="background:${c}" onclick="setHlColor('${c}')" title="${c}"></span>`
+  ).join('')+`
+    <div class="swatch-custom-wrap">
+      <input type="color" class="hl-custom-input" value="${S.hlColor}" style="width:26px;height:26px;border-radius:50%;padding:1px"
+        oninput="setHlColor(this.value)"/>
+    </div>`;
+
+  // Word zone HTML
+  const wordZoneHtml = _buildWordZoneHtml();
 
   return `
     <button class="back-btn" onclick="S.step=3;render()">← Image</button>
@@ -730,6 +800,18 @@ function renderDesign() {
 
       <!-- RIGHT: Control panel -->
       <div class="custom-panel">
+
+        <!-- PRESETS -->
+        <details class="panel-section" open>
+          <summary>Presets</summary>
+          <div class="panel-section-body">
+            <div class="preset-strip">${presetChips}</div>
+            <div class="preset-save-row">
+              <input type="text" id="preset-name-input" placeholder="Preset name…" style="flex:1" onkeydown="if(event.key==='Enter')savePreset()"/>
+              <button class="preset-save-btn" onclick="savePreset()">Save Style</button>
+            </div>
+          </div>
+        </details>
 
         <!-- TEXT CONTENT -->
         <details class="panel-section" open>
@@ -838,11 +920,18 @@ function renderDesign() {
         </details>
 
         <!-- WORD HIGHLIGHTS -->
-        <details class="panel-section">
+        <details class="panel-section" open>
           <summary>Word Highlights</summary>
           <div class="panel-section-body">
-            <div class="word-zone">${wordTokensHtml||'<span style="color:var(--muted);font-size:12px">Add text above first</span>'}</div>
-            ${wordFmtHtml}
+            <div>
+              <div class="ctrl-label" style="margin-bottom:7px">Pick a colour, then tap words to highlight</div>
+              <div class="swatch-row">${swatchHtml}</div>
+            </div>
+            <div class="hl-word-zone" id="hl-word-zone">${wordZoneHtml||'<span style="color:var(--muted);font-size:12px">Add text above first</span>'}</div>
+            <div class="hl-actions">
+              <button class="btn btn-ghost btn-sm" id="btn-auto-hl" onclick="autoHighlight()" style="font-size:11px;flex:1">✦ Auto-Highlight Keywords</button>
+              <button class="btn btn-ghost btn-sm" onclick="clearAllHighlights()" style="font-size:11px;color:#EF4444;border-color:rgba(239,68,68,.3)">Clear All</button>
+            </div>
           </div>
         </details>
 
@@ -908,18 +997,76 @@ function updateColor(key, val) {
   S.customizations[S.activeSlide][key]=val; renderCanvas();
 }
 
-// Word highlight
-function selectWord(clean) {
-  S.selectedWord = S.selectedWord===clean ? null : clean; render();
+// Word highlight — new persistent-panel model
+function hlWord(clean) {
+  // Tap a word: if already highlighted with same colour → remove, else apply current hlColor
+  const wf = S.customizations[S.activeSlide].wordFormats;
+  const existing = wf[clean];
+  if(existing && existing.color===S.hlColor) {
+    delete wf[clean];
+  } else {
+    wf[clean] = {color: S.hlColor, weight: 700};
+  }
+  // Re-render only the word zone + canvas, not the whole panel
+  _refreshWordZone();
+  renderCanvas();
 }
-function setWordFmt(key, val) {
-  const wf=S.customizations[S.activeSlide].wordFormats;
-  if(!wf[S.selectedWord]) wf[S.selectedWord]={};
-  wf[S.selectedWord][key]=val; renderCanvas();
+function setHlColor(color) {
+  S.hlColor = color;
+  // Update swatch active state in-place
+  document.querySelectorAll('.swatch').forEach(s=>{
+    s.classList.toggle('active', s.dataset.color===color);
+  });
+  document.querySelectorAll('.hl-custom-input').forEach(el=>el.value=color);
 }
-function clearWordFmt() {
-  if(S.selectedWord){ delete S.customizations[S.activeSlide].wordFormats[S.selectedWord]; S.selectedWord=null; render(); }
+function clearAllHighlights() {
+  S.customizations[S.activeSlide].wordFormats = {};
+  _refreshWordZone();
+  renderCanvas();
 }
+function _refreshWordZone() {
+  // Re-render just the word zone tokens without full panel rebuild
+  const zone = document.getElementById('hl-word-zone');
+  if(!zone) return;
+  zone.innerHTML = _buildWordZoneHtml();
+}
+function _buildWordZoneHtml() {
+  const custom = S.customizations[S.activeSlide];
+  const rawWords = ((custom.headline||'')+' '+(custom.body||'')).split(/\s+/).filter(Boolean);
+  const seen = new Set();
+  return rawWords.map(w=>{
+    const clean = w.replace(/[^a-zA-Z0-9']/g,'').toLowerCase();
+    if(!clean||seen.has(clean)) return '';
+    seen.add(clean);
+    const fmt = custom.wordFormats[clean];
+    const style = fmt ? `color:${fmt.color};font-weight:${fmt.weight||700};` : '';
+    return `<span class="hltoken${fmt?' is-hl':''}" style="${style}" onclick="hlWord('${escAttr(clean)}')">${esc(w)}</span> `;
+  }).join('');
+}
+async function autoHighlight() {
+  const btn = document.getElementById('btn-auto-hl');
+  if(btn){btn.disabled=true;btn.textContent='Analysing…';}
+  const custom = S.customizations[S.activeSlide];
+  const text = (custom.headline||'')+' '+(custom.body||'');
+  try {
+    const res = await fetch('/api/highlight', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({text, color: S.hlColor})
+    });
+    const {words} = await res.json();
+    if(Array.isArray(words)) {
+      words.forEach(w=>{
+        const clean = w.replace(/[^a-zA-Z0-9']/g,'').toLowerCase();
+        if(clean) custom.wordFormats[clean]={color:S.hlColor, weight:700};
+      });
+    }
+    _refreshWordZone();
+    renderCanvas();
+  } catch(e){ alert('Auto-highlight failed: '+e.message); }
+  finally { if(btn){btn.disabled=false;btn.textContent='✦ Auto-Highlight Keywords';} }
+}
+// Legacy — keep so nothing breaks
+function selectWord(clean) { hlWord(clean); }
 
 // ═══════════════════════════════════════════════════════════════
 // CANVAS RENDERING

@@ -140,6 +140,40 @@ def generate():
     )
 
 
+@app.route('/api/highlight', methods=['POST'])
+def highlight():
+    data = request.get_json() or {}
+    text = data.get('text', '').strip()
+    color = data.get('color', '#FF6B00')
+    if not text:
+        return jsonify({'error': 'Text is required'}), 400
+    try:
+        response = client.messages.create(
+            model='claude-sonnet-4-20250514',
+            max_tokens=200,
+            messages=[{
+                'role': 'user',
+                'content': (
+                    f'Identify the 2-4 most impactful, punchy words in this Instagram story slide text '
+                    f'that would look great highlighted in {color}. '
+                    f'Choose words that carry maximum emotional or persuasive weight — not filler words.\n\n'
+                    f'Text: "{text}"\n\n'
+                    f'Return ONLY a JSON array of the exact words (lowercase), no explanation:\n'
+                    f'["word1","word2","word3"]'
+                )
+            }]
+        )
+        raw = response.content[0].text.strip()
+        m = re.search(r'\[[\s\S]*?\]', raw)
+        if not m:
+            raise ValueError('Could not parse word list')
+        words = json.loads(m.group(0))
+        return jsonify({'words': [str(w).lower() for w in words if w]})
+    except Exception as e:
+        print(f'Highlight error: {e}')
+        return jsonify({'error': str(e)}), 500
+
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 3000))
     print(f'✦ Story Engine running → http://localhost:{port}')
