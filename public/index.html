@@ -214,6 +214,51 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 /* ── DIRECTION NOTE ── */
 .direction-note{display:flex;align-items:flex-start;gap:6px;background:var(--surface2);border-radius:7px;padding:8px 10px;margin-top:8px}
 .direction-note span{font-size:11px;color:var(--muted);font-style:italic;line-height:1.5}
+
+/* ── PANEL ACCORDION ── */
+.panel-section{border-bottom:1px solid var(--border)}
+.panel-section:last-child{border-bottom:none}
+.panel-section summary{list-style:none;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:11px 0;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;outline:none}
+.panel-section summary::-webkit-details-marker{display:none}
+.panel-section summary::after{content:'›';font-size:15px;transition:transform .2s;color:var(--muted)}
+.panel-section[open] summary::after{transform:rotate(90deg)}
+.panel-section-body{padding-bottom:14px;display:flex;flex-direction:column;gap:10px}
+
+/* ── CONTROL PRIMITIVES ── */
+.ctrl-label{font-size:11px;color:var(--muted)}
+.ctrl-row{display:flex;align-items:center;gap:8px}
+.range-wrap{display:flex;align-items:center;gap:8px;flex:1}
+.range-wrap input[type=range]{flex:1}
+.range-val{font-size:11px;color:var(--cream2);min-width:38px;text-align:right;white-space:nowrap}
+.color-row{display:flex;align-items:center;gap:8px}
+input[type=color]{width:32px;height:32px;border-radius:6px;border:1.5px solid var(--border2);background:none;cursor:pointer;padding:2px;flex-shrink:0}
+input[type=color]::-webkit-color-swatch-wrapper{padding:0}
+input[type=color]::-webkit-color-swatch{border:none;border-radius:3px}
+.color-hex{font-size:11px;color:var(--muted);font-family:monospace;letter-spacing:.03em}
+.weight-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.weight-btn{background:var(--surface2);border:1.5px solid var(--border);border-radius:6px;padding:6px 2px;cursor:pointer;transition:all .15s;text-align:center;font-size:10px;font-weight:700;color:var(--muted)}
+.weight-btn:hover{border-color:var(--border2);color:var(--cream2)}
+.weight-btn.selected{border-color:var(--orange);color:var(--orange);background:var(--orange-dim)}
+.align-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.align-btn{background:var(--surface2);border:1.5px solid var(--border);border-radius:6px;padding:8px 4px;cursor:pointer;transition:all .15s;text-align:center;font-size:11px;font-weight:600;color:var(--muted)}
+.align-btn:hover{border-color:var(--border2);color:var(--cream2)}
+.align-btn.selected{border-color:var(--orange);color:var(--orange);background:var(--orange-dim)}
+.slide-textarea{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--cream);font-family:'Space Grotesk',sans-serif;font-size:13px;padding:10px 12px;outline:none;resize:vertical;line-height:1.55;min-height:56px}
+.slide-textarea:focus{border-color:var(--orange)}
+.slide-ta-label{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.word-zone{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;line-height:2.3;min-height:52px}
+.wtoken{display:inline;cursor:pointer;border-radius:3px;padding:1px 2px;transition:all .1s;font-size:12px;color:var(--cream2)}
+.wtoken:hover{background:rgba(255,107,0,.12);color:var(--cream)}
+.wtoken.w-highlighted{font-weight:700}
+.wtoken.w-selected{outline:1.5px solid var(--orange);border-radius:3px;background:rgba(255,107,0,.15)}
+.word-fmt{background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.toggle-row{display:flex;align-items:center;justify-content:space-between}
+.toggle-sw{position:relative;display:inline-block;width:38px;height:20px;flex-shrink:0}
+.toggle-sw input{opacity:0;width:0;height:0}
+.toggle-track{position:absolute;cursor:pointer;inset:0;background:var(--surface3);border-radius:20px;transition:.2s}
+.toggle-track::before{position:absolute;content:'';height:14px;width:14px;left:3px;bottom:3px;background:var(--muted);border-radius:50%;transition:.2s}
+.toggle-sw input:checked+.toggle-track{background:var(--orange)}
+.toggle-sw input:checked+.toggle-track::before{transform:translateX(18px);background:#000}
 </style>
 </head>
 <body>
@@ -247,6 +292,8 @@ const S = {
   ideas: [],
   selectedAngle: null,
   braindumpText: '',
+  topicSlug: 'story',
+  selectedWord: null,
   length: 7,
   slides: [],
   bgDataURL: null,
@@ -300,8 +347,25 @@ const SIZE_SCALE = {S:0.75, M:1, L:1.25, XL:1.55};
 const POSITIONS = ['top','center','bottom'];
 const POS_ICONS = {top:'⬆', center:'◉', bottom:'⬇'};
 
-function defaultCustom() {
-  return {font:'space', size:'M', position:'center', heroWords: new Set()};
+function defaultCustom(slide) {
+  return {
+    headline: slide?.headline || '',
+    body: slide?.body || '',
+    font: 'space',
+    headlineSize: 88,
+    headlineWeight: 800,
+    headlineColor: '#F5F0E8',
+    headlineAlign: 'left',
+    bodySize: 48,
+    bodyWeight: 400,
+    bodyColor: '#C8C0B0',
+    bodyAlign: 'left',
+    lineHeight: 1.2,
+    wordFormats: {},
+    position: 'center',
+    textShadow: true,
+    overlayOpacity: 0.62,
+  };
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -529,8 +593,14 @@ async function startGenerate(mode) {
     }
     if(!slides||!slides.length) throw new Error('No slides returned');
     S.slides = slides;
-    S.customizations = slides.map(()=>defaultCustom());
+    S.customizations = slides.map(sl=>defaultCustom(sl));
     S.activeSlide = 0;
+    S.selectedWord = null;
+    // Derive 1-2 word slug for file naming
+    const topicText = mode==='inspire' ? input : S.braindumpText;
+    S.topicSlug = (topicText||'story').toLowerCase()
+      .replace(/[^a-z0-9\s]/g,'').trim()
+      .split(/\s+/).slice(0,2).join('-') || 'story';
     S.step = 3;
     render();
   } catch(err) {
@@ -596,87 +666,218 @@ function skipImage(){S.bgDataURL=null;S.bgEl=null;S.step=4;render();}
 // STEP 4: DESIGN STUDIO
 // ═══════════════════════════════════════════════════════════════
 function renderDesign() {
-  const slide = S.slides[S.activeSlide];
   const custom = S.customizations[S.activeSlide];
-  const tm = TYPE_META[slide?.type]||TYPE_META.value;
 
-  // Slide thumb list
+  // Slide thumbs
   const thumbList = S.slides.map((sl,i)=>{
     const t=TYPE_META[sl.type]||TYPE_META.value;
     return `<div class="slide-thumb${i===S.activeSlide?' active':''}" onclick="setActiveSlide(${i})">
       <div class="thumb-type tc-${t.c}"><span class="thumb-dot dc-${t.c}"></span>${t.label}</div>
-      <div class="thumb-headline">${esc(sl.headline)}</div>
+      <div class="thumb-headline">${esc(custom.headline||sl.headline)}</div>
     </div>`;
   }).join('');
 
-  // Hero word editor — tokenize headline and body
-  const allText = (slide?.headline||'')+' '+slide?.body||'';
-  const words = allText.split(/\s+/).filter(Boolean);
-  const wordTokens = words.map((w,i)=>{
-    const clean = w.replace(/[^a-zA-Z0-9']/g,'');
-    const isHero = custom.heroWords.has(clean.toLowerCase());
-    return `<span class="word-token${isHero?' hero':''}" onclick="toggleHero('${escAttr(clean)}')" title="Click to highlight">${esc(w)}</span> `;
+  // Word tokens (headline + body, unique cleaned words)
+  const rawWords = ((custom.headline||'')+' '+(custom.body||'')).split(/\s+/).filter(Boolean);
+  const seenClean = new Set();
+  const wordTokensHtml = rawWords.map(w=>{
+    const clean = w.replace(/[^a-zA-Z0-9']/g,'').toLowerCase();
+    if(!clean || seenClean.has(clean)) return '';
+    seenClean.add(clean);
+    const fmt = custom.wordFormats[clean];
+    const style = fmt?.color ? `color:${fmt.color};` : '';
+    const isHL = !!fmt;
+    const isSel = S.selectedWord===clean;
+    return `<span class="wtoken${isHL?' w-highlighted':''}${isSel?' w-selected':''}" style="${style}" onclick="selectWord('${escAttr(clean)}')">${esc(w)}</span> `;
   }).join('');
 
-  // Font grid
-  const fontGrid = FONTS.map(f=>`
-    <div class="font-btn${custom.font===f.id?' selected':''}" onclick="setFont('${f.id}')" style="font-family:${f.css}">
-      <div class="font-btn-name" style="font-size:10px;font-family:'Space Grotesk',sans-serif">${f.label}</div>
-      <div class="font-btn-preview" style="font-family:${f.css}">${f.preview}</div>
-    </div>`).join('');
-
-  // Size buttons
-  const sizeGrid = SIZES.map(s=>`
-    <div class="size-btn${custom.size===s?' selected':''}" onclick="setSize('${s}')">${s}</div>`).join('');
-
-  // Position buttons
-  const posGrid = POSITIONS.map(p=>`
-    <div class="pos-btn${custom.position===p?' selected':''}" onclick="setPos('${p}')" title="${p}">${POS_ICONS[p]}</div>`).join('');
-
-  // Direction note
-  const dirNote = slide?.direction ? `
-    <div class="direction-note">
-      <span>🎬</span>
-      <span>${esc(slide.direction)}</span>
-    </div>` : '';
+  // Selected word format panel
+  const selFmt = S.selectedWord ? (custom.wordFormats[S.selectedWord]||{}) : null;
+  const wordFmtHtml = S.selectedWord ? `
+    <div class="word-fmt">
+      <div style="font-size:11px;color:var(--cream);font-weight:600;margin-bottom:4px">Editing: <span style="color:var(--orange)">"${esc(S.selectedWord)}"</span></div>
+      <div class="color-row">
+        <span class="ctrl-label">Color</span>
+        <input type="color" value="${selFmt.color||'#FF6B00'}" oninput="setWordFmt('color',this.value)"/>
+        <span class="color-hex">${selFmt.color||'#FF6B00'}</span>
+      </div>
+      <div>
+        <div class="ctrl-label" style="margin-bottom:5px">Weight</div>
+        <div class="weight-grid">
+          ${[{v:400,l:'Reg'},{v:500,l:'Med'},{v:700,l:'Bold'},{v:900,l:'Black'}].map(w=>
+            `<div class="weight-btn${(selFmt.weight||700)===w.v?' selected':''}" onclick="setWordFmt('weight',${w.v})">${w.l}</div>`
+          ).join('')}
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="clearWordFmt()" style="font-size:11px">✕ Remove</button>
+    </div>` : `<p style="font-size:11px;color:var(--muted);font-style:italic;margin:0">Click any word above to change its colour or weight.</p>`;
 
   return `
     <button class="back-btn" onclick="S.step=3;render()">← Image</button>
     <div class="section-title">Design Your Slides</div>
-    <div class="section-sub">Customise each slide then download ready-to-post PNGs at 1080×1920.</div>
+    <div class="section-sub">Edit text and styles — export 1080×1920 PNGs, no labels or branding.</div>
     <div class="studio-layout">
-      <!-- Slide List -->
+
+      <!-- LEFT: Slide list -->
       <div class="slide-list" id="slideList">${thumbList}</div>
 
-      <!-- Canvas Preview -->
+      <!-- CENTER: Canvas preview -->
       <div class="preview-wrap">
         <div class="canvas-container" id="canvasWrap">
           <canvas id="previewCanvas"></canvas>
         </div>
-        ${dirNote}
       </div>
 
-      <!-- Customization Panel -->
+      <!-- RIGHT: Control panel -->
       <div class="custom-panel">
-        <div>
-          <div class="custom-section-label">Font</div>
-          <div class="font-grid">${fontGrid}</div>
-        </div>
-        <div>
-          <div class="custom-section-label">Text Size</div>
-          <div class="size-grid">${sizeGrid}</div>
-        </div>
-        <div>
-          <div class="custom-section-label">Position</div>
-          <div class="pos-grid">${posGrid}</div>
-        </div>
-        <div>
-          <div class="custom-section-label">Hero Words <span style="color:var(--orange)">●</span></div>
-          <div class="hero-editor">${wordTokens}</div>
-          <div class="hero-hint">Click words to highlight them in orange on the slide</div>
-        </div>
-      </div>
-    </div>
+
+        <!-- TEXT CONTENT -->
+        <details class="panel-section" open>
+          <summary>Text Content</summary>
+          <div class="panel-section-body">
+            <div>
+              <div class="slide-ta-label">Headline</div>
+              <textarea class="slide-textarea" rows="3" oninput="updateText('headline',this.value)">${esc(custom.headline)}</textarea>
+            </div>
+            <div>
+              <div class="slide-ta-label">Body Copy</div>
+              <textarea class="slide-textarea" rows="4" oninput="updateText('body',this.value)">${esc(custom.body)}</textarea>
+            </div>
+          </div>
+        </details>
+
+        <!-- HEADLINE STYLE -->
+        <details class="panel-section" open>
+          <summary>Headline Style</summary>
+          <div class="panel-section-body">
+            <div class="font-grid">
+              ${FONTS.map(f=>`
+                <div class="font-btn${custom.font===f.id?' selected':''}" onclick="setCustom('font','${f.id}')" style="font-family:${f.css}">
+                  <div class="font-btn-name" style="font-family:'Space Grotesk',sans-serif;font-size:9px">${f.label}</div>
+                  <div class="font-btn-preview" style="font-family:${f.css}">${f.preview}</div>
+                </div>`).join('')}
+            </div>
+            <div class="ctrl-row">
+              <span class="ctrl-label">Size</span>
+              <div class="range-wrap">
+                <input type="range" min="40" max="130" value="${custom.headlineSize}"
+                  oninput="updateSlider('headlineSize',+this.value);document.getElementById('hs-v').textContent=this.value+'px'"/>
+                <span class="range-val" id="hs-v">${custom.headlineSize}px</span>
+              </div>
+            </div>
+            <div>
+              <div class="ctrl-label" style="margin-bottom:5px">Weight</div>
+              <div class="weight-grid">
+                ${[{v:400,l:'Regular'},{v:500,l:'Medium'},{v:700,l:'Bold'},{v:900,l:'Black'}].map(w=>
+                  `<div class="weight-btn${custom.headlineWeight===w.v?' selected':''}" onclick="setCustom('headlineWeight',${w.v})">${w.l}</div>`
+                ).join('')}
+              </div>
+            </div>
+            <div>
+              <div class="ctrl-label" style="margin-bottom:5px">Color</div>
+              <div class="color-row">
+                <input type="color" value="${custom.headlineColor}" oninput="updateColor('headlineColor',this.value);document.getElementById('hc-hex').textContent=this.value"/>
+                <span class="color-hex" id="hc-hex">${custom.headlineColor}</span>
+              </div>
+            </div>
+            <div>
+              <div class="ctrl-label" style="margin-bottom:5px">Alignment</div>
+              <div class="align-grid">
+                ${[{v:'left',l:'Left'},{v:'center',l:'Centre'},{v:'right',l:'Right'}].map(a=>
+                  `<div class="align-btn${custom.headlineAlign===a.v?' selected':''}" onclick="setCustom('headlineAlign','${a.v}')">${a.l}</div>`
+                ).join('')}
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <!-- BODY STYLE -->
+        <details class="panel-section">
+          <summary>Body Style</summary>
+          <div class="panel-section-body">
+            <div class="ctrl-row">
+              <span class="ctrl-label">Size</span>
+              <div class="range-wrap">
+                <input type="range" min="24" max="72" value="${custom.bodySize}"
+                  oninput="updateSlider('bodySize',+this.value);document.getElementById('bs-v').textContent=this.value+'px'"/>
+                <span class="range-val" id="bs-v">${custom.bodySize}px</span>
+              </div>
+            </div>
+            <div>
+              <div class="ctrl-label" style="margin-bottom:5px">Weight</div>
+              <div class="weight-grid">
+                ${[{v:400,l:'Regular'},{v:500,l:'Medium'},{v:700,l:'Bold'},{v:900,l:'Black'}].map(w=>
+                  `<div class="weight-btn${custom.bodyWeight===w.v?' selected':''}" onclick="setCustom('bodyWeight',${w.v})">${w.l}</div>`
+                ).join('')}
+              </div>
+            </div>
+            <div>
+              <div class="ctrl-label" style="margin-bottom:5px">Color</div>
+              <div class="color-row">
+                <input type="color" value="${custom.bodyColor}" oninput="updateColor('bodyColor',this.value);document.getElementById('bc-hex').textContent=this.value"/>
+                <span class="color-hex" id="bc-hex">${custom.bodyColor}</span>
+              </div>
+            </div>
+            <div>
+              <div class="ctrl-label" style="margin-bottom:5px">Alignment</div>
+              <div class="align-grid">
+                ${[{v:'left',l:'Left'},{v:'center',l:'Centre'},{v:'right',l:'Right'}].map(a=>
+                  `<div class="align-btn${custom.bodyAlign===a.v?' selected':''}" onclick="setCustom('bodyAlign','${a.v}')">${a.l}</div>`
+                ).join('')}
+              </div>
+            </div>
+            <div class="ctrl-row">
+              <span class="ctrl-label">Line Height</span>
+              <div class="range-wrap">
+                <input type="range" min="100" max="200" value="${Math.round(custom.lineHeight*100)}"
+                  oninput="updateSlider('lineHeight',this.value/100);document.getElementById('lh-v').textContent=(this.value/100).toFixed(1)+'×'"/>
+                <span class="range-val" id="lh-v">${custom.lineHeight.toFixed(1)}×</span>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <!-- WORD HIGHLIGHTS -->
+        <details class="panel-section">
+          <summary>Word Highlights</summary>
+          <div class="panel-section-body">
+            <div class="word-zone">${wordTokensHtml||'<span style="color:var(--muted);font-size:12px">Add text above first</span>'}</div>
+            ${wordFmtHtml}
+          </div>
+        </details>
+
+        <!-- CANVAS & EFFECTS -->
+        <details class="panel-section" open>
+          <summary>Canvas & Effects</summary>
+          <div class="panel-section-body">
+            <div>
+              <div class="ctrl-label" style="margin-bottom:5px">Text Position</div>
+              <div class="pos-grid">
+                ${[{v:'top',l:'Top'},{v:'center',l:'Middle'},{v:'bottom',l:'Bottom'}].map(p=>
+                  `<div class="pos-btn${custom.position===p.v?' selected':''}" onclick="setCustom('position','${p.v}')">${p.l}</div>`
+                ).join('')}
+              </div>
+            </div>
+            <div class="ctrl-row">
+              <span class="ctrl-label">Overlay</span>
+              <div class="range-wrap">
+                <input type="range" min="0" max="95" value="${Math.round(custom.overlayOpacity*100)}"
+                  oninput="updateSlider('overlayOpacity',this.value/100);document.getElementById('ov-v').textContent=this.value+'%'"/>
+                <span class="range-val" id="ov-v">${Math.round(custom.overlayOpacity*100)}%</span>
+              </div>
+            </div>
+            <div class="toggle-row">
+              <span class="ctrl-label">Text Shadow</span>
+              <label class="toggle-sw">
+                <input type="checkbox" ${custom.textShadow?'checked':''} onchange="setCustom('textShadow',this.checked)"/>
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+          </div>
+        </details>
+
+      </div><!-- end custom-panel -->
+    </div><!-- end studio-layout -->
 
     <div class="export-bar">
       <button class="btn btn-dl" onclick="downloadSlide(${S.activeSlide})">⬇ This Slide</button>
@@ -685,23 +886,39 @@ function renderDesign() {
 }
 
 function initDesign() {
-  requestAnimationFrame(()=>{
-    renderCanvas();
-  });
+  document.fonts.ready.then(()=>renderCanvas());
 }
 
 function setActiveSlide(i) {
-  S.activeSlide=i;
-  render();
+  S.activeSlide=i; S.selectedWord=null; render();
 }
-function setFont(f){S.customizations[S.activeSlide].font=f; render();}
-function setSize(s){S.customizations[S.activeSlide].size=s; render();}
-function setPos(p){S.customizations[S.activeSlide].position=p; render();}
-function toggleHero(word) {
-  const key=word.toLowerCase();
-  const h=S.customizations[S.activeSlide].heroWords;
-  if(h.has(key)) h.delete(key); else h.add(key);
-  render();
+
+// Full re-render — for buttons whose visual selected-state must update
+function setCustom(key, val) {
+  S.customizations[S.activeSlide][key]=val; render();
+}
+// Canvas-only updates — for sliders/typing (no DOM rebuild, preserves focus)
+function updateText(key, val) {
+  S.customizations[S.activeSlide][key]=val; renderCanvas();
+}
+function updateSlider(key, val) {
+  S.customizations[S.activeSlide][key]=val; renderCanvas();
+}
+function updateColor(key, val) {
+  S.customizations[S.activeSlide][key]=val; renderCanvas();
+}
+
+// Word highlight
+function selectWord(clean) {
+  S.selectedWord = S.selectedWord===clean ? null : clean; render();
+}
+function setWordFmt(key, val) {
+  const wf=S.customizations[S.activeSlide].wordFormats;
+  if(!wf[S.selectedWord]) wf[S.selectedWord]={};
+  wf[S.selectedWord][key]=val; renderCanvas();
+}
+function clearWordFmt() {
+  if(S.selectedWord){ delete S.customizations[S.activeSlide].wordFormats[S.selectedWord]; S.selectedWord=null; render(); }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -719,136 +936,117 @@ async function renderCanvas(forExport=false, slideIdx=null) {
   canvas.width=W; canvas.height=H;
 
   const ctx=canvas.getContext('2d');
-  const slide=S.slides[idx];
   const custom=S.customizations[idx];
+  if(!custom) return null;
 
-  // 1. Background
+  const SF = W/EXPORT_W; // scale factor: 1 for export, ~0.333 for preview
+
+  // 1. Black base
   ctx.fillStyle='#111111';
   ctx.fillRect(0,0,W,H);
 
+  // 2. Background image/video (cover-fit)
   if(S.bgEl) {
-    const src = S.bgIsVideo ? S.bgEl : S.bgEl;
     try {
-      const iW = S.bgIsVideo ? S.bgEl.videoWidth : S.bgEl.naturalWidth;
-      const iH = S.bgIsVideo ? S.bgEl.videoHeight : S.bgEl.naturalHeight;
-      if(iW>0 && iH>0){
-        const scale=Math.max(W/iW, H/iH);
-        const dw=iW*scale, dh=iH*scale;
-        const dx=(W-dw)/2, dy=(H-dh)/2;
-        ctx.drawImage(src, dx, dy, dw, dh);
+      const iW=S.bgIsVideo?S.bgEl.videoWidth:S.bgEl.naturalWidth;
+      const iH=S.bgIsVideo?S.bgEl.videoHeight:S.bgEl.naturalHeight;
+      if(iW>0&&iH>0){
+        const sc=Math.max(W/iW,H/iH);
+        ctx.drawImage(S.bgEl,(W-iW*sc)/2,(H-iH*sc)/2,iW*sc,iH*sc);
       }
-    } catch(e) {}
+    } catch(e){}
   }
 
-  // 2. Dark gradient overlay
+  // 3. Gradient overlay (opacity-controlled)
+  const op=Math.max(0,Math.min(1,custom.overlayOpacity??0.62));
   const grad=ctx.createLinearGradient(0,0,0,H);
-  grad.addColorStop(0,'rgba(0,0,0,0.72)');
-  grad.addColorStop(0.4,'rgba(0,0,0,0.45)');
-  grad.addColorStop(1,'rgba(0,0,0,0.85)');
+  grad.addColorStop(0,`rgba(0,0,0,${Math.min(op+0.12,1)})`);
+  grad.addColorStop(0.45,`rgba(0,0,0,${Math.max(op-0.08,0)})`);
+  grad.addColorStop(1,`rgba(0,0,0,${Math.min(op+0.18,1)})`);
   ctx.fillStyle=grad;
   ctx.fillRect(0,0,W,H);
 
-  // 3. Orange accent bar at top
-  ctx.fillStyle='#FF6B00';
-  ctx.fillRect(0, 0, W*0.08, 5);
-
-  // 4. Type label
-  const tm=TYPE_META[slide?.type]||TYPE_META.value;
-  const typeColors={hook:'#9333EA',pain:'#EF4444',relate:'#F59E0B',shift:'#10B981',value:'#3B82F6',proof:'#06B6D4',cta:'#FF6B00'};
-  const typeColor=typeColors[slide?.type]||'#FF6B00';
-
-  ctx.save();
+  // 4. Text layout
   const padX=W*0.09;
-  const typeSize=forExport?28:10;
-  ctx.font=`700 ${typeSize}px 'Space Grotesk', sans-serif`;
-  ctx.fillStyle=typeColor;
-  ctx.fillText((tm.emoji+' '+tm.label).toUpperCase(), padX, forExport?90:32);
-  ctx.restore();
+  const fontFam=FONTS.find(f=>f.id===custom.font)?.css||"'Space Grotesk',sans-serif";
+  const headSize=Math.round(custom.headlineSize*SF);
+  const bodySize=Math.round(custom.bodySize*SF);
+  const lhMult=custom.lineHeight||1.2;
+  const lineH=headSize*lhMult;
+  const bodyLineH=bodySize*lhMult;
+  const maxW=W-padX*2;
+  const shadow=custom.textShadow!==false;
 
-  // 5. Compute text Y based on position
-  const fontFam = FONTS.find(f=>f.id===custom.font)?.css||"'Space Grotesk',sans-serif";
-  const scale=SIZE_SCALE[custom.size]||1;
-  const baseHead=forExport?90:32;
-  const baseBody=forExport?52:18.5;
-  const headSize=Math.round(baseHead*scale);
-  const bodySize=Math.round(baseBody*scale);
-  const lineH=headSize*1.15;
-  const bodyLineH=bodySize*1.55;
-  const maxW=W - padX*2;
+  ctx.font=`${custom.headlineWeight} ${headSize}px ${fontFam}`;
+  const headLines=wrapText(ctx,custom.headline||'',maxW);
+  ctx.font=`${custom.bodyWeight} ${bodySize}px ${fontFam}`;
+  const bodyLines=wrapText(ctx,custom.body||'',maxW);
 
-  // Measure all lines to know total block height
-  ctx.font=`800 ${headSize}px ${fontFam}`;
-  const headLines=wrapText(ctx, slide?.headline||'', maxW);
-  ctx.font=`400 ${bodySize}px ${fontFam}`;
-  const bodyLines=wrapText(ctx, slide?.body||'', maxW);
-  const totalH = headLines.length*lineH + (forExport?60:22) + bodyLines.length*bodyLineH;
+  const sepH=Math.round(30*SF);
+  const totalH=headLines.length*lineH+sepH+bodyLines.length*bodyLineH;
 
   let startY;
-  if(custom.position==='top') startY = H*0.12;
-  else if(custom.position==='bottom') startY = H - totalH - H*0.12;
-  else startY = (H - totalH)/2;
+  if(custom.position==='top') startY=H*0.1;
+  else if(custom.position==='bottom') startY=H-totalH-H*0.1;
+  else startY=(H-totalH)/2;
 
-  // 6. Draw headline word-by-word (hero words in orange)
-  let curY=startY;
-  for(const line of headLines){
-    const lineWords=line.split(' ');
-    let curX=padX;
-    for(const word of lineWords){
-      const clean=word.replace(/[^a-zA-Z0-9']/g,'').toLowerCase();
-      const isHero=custom.heroWords.has(clean);
-      ctx.font=`${isHero?'900':'800'} ${headSize}px ${fontFam}`;
-      ctx.fillStyle=isHero?'#FF6B00':'#F5F0E8';
-      if(forExport) {
-        ctx.shadowColor='rgba(0,0,0,0.5)'; ctx.shadowBlur=20;
-      }
-      ctx.fillText(word, curX, curY+headSize);
-      curX += ctx.measureText(word+' ').width;
-    }
-    curY+=lineH;
-  }
-  ctx.shadowBlur=0;
+  // 5. Headline
+  let curY=drawTextLines(ctx,headLines,custom.wordFormats,startY,padX,maxW,W,
+    custom.headlineColor||'#F5F0E8',custom.headlineWeight||800,
+    headSize,fontFam,lineH,custom.headlineAlign||'left',shadow);
 
-  // 7. Separator line
-  curY += forExport?30:11;
+  // 6. Separator bar
   ctx.fillStyle='#FF6B00';
-  ctx.fillRect(padX, curY, forExport?80:28, forExport?4:1.5);
-  curY += forExport?45:16;
+  ctx.fillRect(padX,curY+Math.round(8*SF),Math.round(70*SF),Math.round(3*SF));
+  curY+=sepH;
 
-  // 8. Draw body text (hero words in orange too)
-  for(const line of bodyLines){
-    const lineWords=line.split(' ');
-    let curX=padX;
-    for(const word of lineWords){
-      const clean=word.replace(/[^a-zA-Z0-9']/g,'').toLowerCase();
-      const isHero=custom.heroWords.has(clean);
-      ctx.font=`${isHero?'600':'400'} ${bodySize}px ${fontFam}`;
-      ctx.fillStyle=isHero?'#FF6B00':'#C8C0B0';
-      ctx.fillText(word, curX, curY+bodySize);
-      curX += ctx.measureText(word+' ').width;
-    }
-    curY+=bodyLineH;
-  }
+  // 7. Body
+  drawTextLines(ctx,bodyLines,custom.wordFormats,curY,padX,maxW,W,
+    custom.bodyColor||'#C8C0B0',custom.bodyWeight||400,
+    bodySize,fontFam,bodyLineH,custom.bodyAlign||'left',shadow);
 
-  // 9. Bottom branding
-  const brandSize=forExport?24:8.5;
-  ctx.font=`600 ${brandSize}px 'Space Grotesk',sans-serif`;
-  ctx.fillStyle='rgba(245,240,232,0.3)';
-  ctx.fillText('STORY ENGINE', padX, H - (forExport?60:21));
-
+  // No type label. No branding footer.
   return canvas;
 }
 
-function wrapText(ctx, text, maxWidth) {
+// Render lines of text with per-word colour/weight overrides
+function drawTextLines(ctx,lines,wordFormats,startY,padX,maxW,W,defaultColor,defaultWeight,fontSize,fontFam,lineH,align,shadow) {
+  let curY=startY;
+  if(shadow){ctx.shadowColor='rgba(0,0,0,0.85)';ctx.shadowBlur=14;ctx.shadowOffsetX=1;ctx.shadowOffsetY=2;}
+  for(const line of lines){
+    const words=line.split(' ');
+    let startX=padX;
+    if(align!=='left'){
+      ctx.font=`${defaultWeight} ${fontSize}px ${fontFam}`;
+      const lw=ctx.measureText(line).width;
+      startX=align==='center'?(W-lw)/2:W-padX-lw;
+    }
+    let curX=startX;
+    for(const word of words){
+      const clean=word.replace(/[^a-zA-Z0-9']/g,'').toLowerCase();
+      const fmt=wordFormats?.[clean]||{};
+      const weight=fmt.weight||defaultWeight;
+      const color=fmt.color||defaultColor;
+      ctx.font=`${weight} ${fontSize}px ${fontFam}`;
+      ctx.fillStyle=color;
+      ctx.fillText(word,curX,curY+fontSize);
+      curX+=ctx.measureText(word+' ').width;
+    }
+    curY+=lineH;
+  }
+  ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
+  return curY;
+}
+
+function wrapText(ctx,text,maxWidth){
   const words=(text||'').split(' ');
-  const lines=[];
-  let line='';
+  const lines=[];let line='';
   for(const word of words){
     const test=line?line+' '+word:word;
-    if(ctx.measureText(test).width>maxWidth && line){
-      lines.push(line); line=word;
-    } else line=test;
+    if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=word;}
+    else line=test;
   }
-  if(line) lines.push(line);
+  if(line)lines.push(line);
   return lines;
 }
 
@@ -857,12 +1055,11 @@ function wrapText(ctx, text, maxWidth) {
 // ═══════════════════════════════════════════════════════════════
 async function downloadSlide(idx) {
   await document.fonts.ready;
-  const canvas=await renderCanvas(true, idx);
+  const canvas=await renderCanvas(true,idx);
   if(!canvas) return;
-  const slide=S.slides[idx];
   const a=document.createElement('a');
   a.href=canvas.toDataURL('image/png');
-  a.download=`story-slide-${idx+1}-${slide?.type||'slide'}.png`;
+  a.download=`${S.topicSlug}-${idx+1}.png`;
   a.click();
 }
 
@@ -872,18 +1069,16 @@ async function downloadAll() {
   if(btn){btn.disabled=true;btn.textContent='⏳ Rendering…';}
   try {
     const zip=new JSZip();
-    const folder=zip.folder('story-slides');
+    const folder=zip.folder(S.topicSlug);
     for(let i=0;i<S.slides.length;i++){
       const canvas=await renderCanvas(true,i);
       if(!canvas) continue;
-      const dataURL=canvas.toDataURL('image/png');
-      const base64=dataURL.split(',')[1];
-      folder.file(`slide-${i+1}-${S.slides[i]?.type||'slide'}.png`, base64, {base64:true});
+      folder.file(`${S.topicSlug}-${i+1}.png`,canvas.toDataURL('image/png').split(',')[1],{base64:true});
     }
-    const content=await zip.generateAsync({type:'blob'});
+    const blob=await zip.generateAsync({type:'blob'});
     const a=document.createElement('a');
-    a.href=URL.createObjectURL(content);
-    a.download='story-slides.zip';
+    a.href=URL.createObjectURL(blob);
+    a.download=`${S.topicSlug}-slides.zip`;
     a.click();
   } finally {
     if(btn){btn.disabled=false;btn.textContent=`⬇ Download All (${S.slides.length})`;}
