@@ -145,8 +145,31 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 
 /* canvas preview */
 .preview-wrap{display:flex;flex-direction:column;align-items:center;gap:12px}
-.canvas-container{position:relative;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.6);width:100%;max-width:320px;margin:0 auto}
+.canvas-outer{display:flex;align-items:center;gap:0;width:100%;max-width:340px;margin:0 auto;position:relative}
+.canvas-container{position:relative;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.6);flex:1}
 .canvas-container canvas{display:block;width:100%;height:auto;border-radius:12px}
+
+/* vertical text-size slider */
+.vslider-track{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:28px;flex-shrink:0;padding:8px 0;position:relative;z-index:2}
+.vslider-wrap{height:180px;display:flex;align-items:center;justify-content:center;position:relative}
+input[type=range].vslider{
+  -webkit-appearance:none;appearance:none;
+  writing-mode:vertical-lr;direction:rtl;
+  width:4px;height:160px;
+  background:var(--surface3);border-radius:4px;outline:none;cursor:pointer;
+  transform:none;
+}
+input[type=range].vslider::-webkit-slider-thumb{
+  -webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+  background:var(--orange);box-shadow:0 0 8px var(--orange-glow);
+  border:2px solid var(--bg);cursor:grab;
+}
+input[type=range].vslider::-moz-range-thumb{
+  width:18px;height:18px;border-radius:50%;
+  background:var(--orange);border:2px solid var(--bg);cursor:grab;
+}
+.vslider-reset{background:none;border:none;cursor:pointer;color:var(--muted);font-size:9px;font-family:'Space Grotesk',sans-serif;font-weight:700;padding:3px;border-radius:3px;line-height:1;transition:color .15s;text-align:center;letter-spacing:.02em}
+.vslider-reset:hover{color:var(--orange)}
 
 /* customization panel */
 .custom-panel{display:flex;flex-direction:column;gap:14px}
@@ -433,6 +456,7 @@ function defaultCustom(slide) {
   return {
     headline: slide?.headline || '',
     body: slide?.body || '',
+    textScale: 1.0,
     font: 'space',
     headlineSize: 88,
     headlineWeight: 800,
@@ -794,8 +818,22 @@ function renderDesign() {
 
       <!-- CENTER: Canvas preview -->
       <div class="preview-wrap">
-        <div class="canvas-container" id="canvasWrap">
-          <canvas id="previewCanvas"></canvas>
+        <div class="canvas-outer">
+          <!-- Vertical size slider -->
+          <div class="vslider-track">
+            <div class="vslider-wrap">
+              <input type="range" class="vslider" id="vslider"
+                min="40" max="160" step="1"
+                value="${Math.round((S.customizations[S.activeSlide].textScale||1)*100)}"
+                oninput="setTextScale(this.value/100)"
+                ondblclick="resetTextScale()"/>
+            </div>
+            <button class="vslider-reset" onclick="resetTextScale()" title="Reset size">↺</button>
+          </div>
+          <!-- Canvas -->
+          <div class="canvas-container" id="canvasWrap">
+            <canvas id="previewCanvas"></canvas>
+          </div>
         </div>
       </div>
 
@@ -1082,6 +1120,18 @@ async function autoHighlight() {
 // Legacy — keep so nothing breaks
 function selectWord(clean) { hlWord(clean); }
 
+// Vertical text-scale slider
+function setTextScale(val) {
+  S.customizations[S.activeSlide].textScale = Math.max(0.4, Math.min(1.6, val));
+  renderCanvas();
+}
+function resetTextScale() {
+  S.customizations[S.activeSlide].textScale = 1.0;
+  const slider = document.getElementById('vslider');
+  if(slider) slider.value = 100;
+  renderCanvas();
+}
+
 // ═══════════════════════════════════════════════════════════════
 // CANVAS RENDERING
 // ═══════════════════════════════════════════════════════════════
@@ -1130,8 +1180,9 @@ async function renderCanvas(forExport=false, slideIdx=null) {
   // 4. Text layout
   const padX=W*0.09;
   const fontFam=FONTS.find(f=>f.id===custom.font)?.css||"'Space Grotesk',sans-serif";
-  const headSize=Math.round(custom.headlineSize*SF);
-  const bodySize=Math.round(custom.bodySize*SF);
+  const tScale=custom.textScale||1.0;
+  const headSize=Math.round(custom.headlineSize*SF*tScale);
+  const bodySize=Math.round(custom.bodySize*SF*tScale);
   const lhMult=custom.lineHeight||1.2;
   const lineH=headSize*lhMult;
   const bodyLineH=bodySize*lhMult;
