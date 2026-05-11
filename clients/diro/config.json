@@ -1,0 +1,9 @@
+{
+  "id": "diro",
+  "name": "Diro Lawal",
+  "niche": "Creative director building content systems for busy entrepreneurs",
+  "default_length": 8,
+  "default_language": "English",
+  "trigger_words": ["SYSTEM", "CONTENT", "CALL"],
+  "password_env": "DIRO_PASSWORD"
+}
