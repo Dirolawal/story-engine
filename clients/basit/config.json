@@ -1,0 +1,9 @@
+{
+  "id": "basit",
+  "name": "Basit Oyebanji",
+  "niche": "High-ticket sales mentor for athletes and 9-5ers",
+  "default_length": 9,
+  "default_language": "English",
+  "trigger_words": ["HAVEN", "FIRE", "STORY"],
+  "password_env": "BASIT_PASSWORD"
+}

@@ -319,6 +319,60 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:3px}
 .preset-save-btn:hover{border-color:var(--orange);color:var(--orange)}
 .preset-empty{font-size:11px;color:var(--muted);font-style:italic}
 
+/* ── LANGUAGE BAR ── */
+.lang-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:20px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px}
+.lang-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.lang-select{flex:1;min-width:160px;background:var(--surface2);border:1.5px solid var(--border2);border-radius:7px;color:var(--cream);font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;padding:8px 10px;outline:none;cursor:pointer;transition:border-color .18s}
+.lang-select:focus{border-color:var(--orange)}
+.lang-select option{background:#1e1e1e}
+.btn-restore{background:var(--surface2);border:1.5px solid var(--border2);color:var(--cream2);font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;padding:7px 12px;border-radius:7px;cursor:pointer;white-space:nowrap;transition:all .15s}
+.btn-restore:hover{border-color:var(--orange);color:var(--orange)}
+.translate-spinner{display:none;width:16px;height:16px;border:2px solid var(--surface3);border-top-color:var(--orange);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+
+/* ── RESEARCH BADGE ── */
+.research-badge{display:inline-flex;align-items:center;gap:3px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);border-radius:20px;padding:2px 7px;font-size:10px;font-weight:700;letter-spacing:.04em;color:#60A5FA;margin-top:5px}
+.research-badge::before{content:'◉';font-size:8px}
+.btn-research{background:var(--surface2);border:1.5px solid rgba(59,130,246,.3);color:#60A5FA;font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;padding:9px 14px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .18s;white-space:nowrap}
+.btn-research:hover{border-color:#3B82F6;background:rgba(59,130,246,.08)}
+.btn-research:disabled{opacity:.5;cursor:not-allowed}
+.research-pill{display:inline-flex;align-items:center;gap:4px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);border-radius:8px;padding:6px 10px;font-size:11px;color:#93C5FD;line-height:1.4}
+
+/* ── VOICE MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:2000;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px)}
+@media(min-width:600px){.modal-overlay{align-items:center}}
+.modal-sheet{background:var(--surface);border:1px solid var(--border2);border-radius:16px 16px 0 0;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:16px}
+@media(min-width:600px){.modal-sheet{border-radius:16px;max-height:85vh}}
+.modal-title{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:.08em;color:var(--cream)}
+.modal-sub{font-size:13px;color:var(--muted);line-height:1.5;margin-top:-8px}
+.modal-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px;border-radius:4px;line-height:1;align-self:flex-start;margin-left:auto;margin-top:-20px}
+.modal-close:hover{color:var(--cream)}
+.voice-tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.voice-tab{background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 8px;cursor:pointer;transition:all .18s;text-align:center}
+.voice-tab:hover{border-color:var(--border2)}
+.voice-tab.active{border-color:var(--orange);background:var(--orange-dim)}
+.voice-tab-icon{font-size:18px;margin-bottom:4px}
+.voice-tab-label{font-size:11px;font-weight:700;color:var(--cream2)}
+.voice-pane{display:none}
+.voice-pane.active{display:flex;flex-direction:column;gap:12px}
+.voice-q-label{font-size:12px;font-weight:700;color:var(--cream2);margin-bottom:4px}
+.btn-record{display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:8px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--cream);font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .18s;width:100%;justify-content:center}
+.btn-record:hover{border-color:var(--orange)}
+.btn-record.recording{border-color:#EF4444;color:#EF4444;animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
+.record-dot{width:10px;height:10px;border-radius:50%;background:currentColor;flex-shrink:0}
+.voice-transcript{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--cream2);min-height:60px;line-height:1.6;white-space:pre-wrap}
+.voice-profile-card{background:var(--surface2);border:1.5px solid var(--orange);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.vp-trait{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.vp-key{font-size:11px;color:var(--muted);font-weight:600;min-width:80px;letter-spacing:.04em;text-transform:uppercase}
+.vp-val{font-size:12px;color:var(--cream);font-weight:600;text-align:right}
+.vp-note{font-size:12px;color:var(--cream2);line-height:1.5;border-top:1px solid var(--border);padding-top:8px;margin-top:4px}
+.btn-voice-header{background:none;border:1.5px solid var(--border2);color:var(--cream2);font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;padding:6px 10px;border-radius:20px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;letter-spacing:.04em;white-space:nowrap}
+.btn-voice-header:hover{border-color:var(--orange);color:var(--orange)}
+.btn-voice-header.has-profile{border-color:var(--orange);color:var(--orange);background:var(--orange-dim)}
+.voice-active-banner{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--orange-dim);border:1px solid var(--orange);border-radius:8px;padding:8px 12px;margin-bottom:10px}
+.vab-text{font-size:12px;color:var(--orange);font-weight:700}
+.vab-toggle-wrap{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--cream2)}
+
 /* ── WORD HIGHLIGHT PANEL ── */
 .swatch-row{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
 .swatch{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2.5px solid transparent;transition:all .12s;flex-shrink:0;outline:none}
@@ -330,6 +384,19 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:3px}
 .hltoken:hover{background:rgba(255,255,255,.08)}
 .hltoken.is-hl{font-weight:700}
 .hl-actions{display:flex;gap:6px;flex-wrap:wrap}
+
+/* ── CLIENT LOGIN + BADGE ── */
+#client-bar{display:none;align-items:center;gap:8px}
+.client-badge{background:var(--orange-dim);color:var(--orange);border:1px solid var(--orange);border-radius:999px;padding:5px 12px;font-size:12px;font-weight:700;letter-spacing:.03em}
+.btn-logout{background:transparent;border:1px solid var(--border2);color:var(--cream2);border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;letter-spacing:.04em;font-weight:600}
+.btn-logout:hover{border-color:var(--cream2);color:var(--cream)}
+.client-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:8px}
+@media(min-width:480px){.client-grid{grid-template-columns:repeat(2,1fr)}}
+.client-card{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:all .18s}
+.client-card:hover{border-color:var(--border2);background:var(--surface3)}
+.client-card.selected{border-color:var(--orange);background:var(--orange-dim);box-shadow:0 0 0 1px var(--orange)}
+.client-card-name{font-size:14px;font-weight:800;color:var(--cream);letter-spacing:.02em;margin-bottom:3px}
+.client-card-niche{font-size:11px;color:var(--cream2);line-height:1.35}
 </style>
 </head>
 <body>
@@ -339,13 +406,20 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:3px}
     <div class="logo-icon">SE</div>
     <span class="logo-text">Story Engine</span>
   </div>
-  <div class="step-indicator" id="stepIndicator">
-    <div class="step-dot active" title="Niche"></div>
-    <div class="step-dot" title="Story"></div>
-    <div class="step-dot" title="Image"></div>
-    <div class="step-dot" title="Design"></div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div id="client-bar"></div>
+    <button id="btn-my-voice" class="btn-voice-header" onclick="openVoiceModal()">
+      <span>◈</span> <span id="voice-btn-label">My Voice</span>
+    </button>
+    <div class="step-indicator" id="stepIndicator">
+      <div class="step-dot active" title="Niche"></div>
+      <div class="step-dot" title="Story"></div>
+      <div class="step-dot" title="Image"></div>
+      <div class="step-dot" title="Design"></div>
+    </div>
   </div>
 </header>
+<div id="voice-modal" style="display:none" class="modal-overlay" onclick="if(event.target===this)closeVoiceModal()"></div>
 
 <main class="main" id="app"></main>
 
@@ -355,6 +429,7 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:3px}
 // ═══════════════════════════════════════════════════════════════
 const S = {
   step: 1,          // 1=niche 2=story 3=image 4=design
+  client: null,     // logged-in client {id, name, niche, password, ...}
   niche: '',
   nicheCustom: '',
   mode: 'inspire',
@@ -374,6 +449,15 @@ const S = {
   bgEl: null,
   activeSlide: 0,
   customizations: [],
+  // Language
+  language: 'English',
+  originalCustomizations: null, // backup before translation
+  // Voice profile
+  voiceProfile: null,  // loaded from localStorage
+  useVoice: false,
+  // Research
+  researchData: null,
+  researchInformed: false,
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -427,6 +511,167 @@ function deletePreset(name) {
   savePresets(loadPresets().filter(p=>p.name!==name));
   render();
 }
+
+// ═══════════════════════════════════════════════════════════════
+// VOICE PROFILE  (localStorage-backed)
+// ═══════════════════════════════════════════════════════════════
+const VOICE_KEY = 'se_voice_v1';
+
+function loadVoiceProfile() {
+  try { return JSON.parse(localStorage.getItem(VOICE_KEY)||'null'); } catch(e){ return null; }
+}
+function saveVoiceProfile(profile) {
+  localStorage.setItem(VOICE_KEY, JSON.stringify(profile));
+  S.voiceProfile = profile;
+}
+function deleteVoiceProfile() {
+  localStorage.removeItem(VOICE_KEY);
+  S.voiceProfile = null;
+  S.useVoice = false;
+}
+
+// Boot: load persisted voice profile
+S.voiceProfile = loadVoiceProfile();
+if(S.voiceProfile) S.useVoice = true;
+
+// ═══════════════════════════════════════════════════════════════
+// CLIENT AUTH  (sessionStorage — clears on tab close)
+// ═══════════════════════════════════════════════════════════════
+const CLIENT_KEY = 'se_client_v1';
+let _clientsCatalog = [];
+let _loginClientId = null;
+
+function loadStoredClient() {
+  try { return JSON.parse(sessionStorage.getItem(CLIENT_KEY) || 'null'); } catch(e) { return null; }
+}
+function saveStoredClient(c) {
+  sessionStorage.setItem(CLIENT_KEY, JSON.stringify(c));
+}
+function clearClient() {
+  sessionStorage.removeItem(CLIENT_KEY);
+  S.client = null;
+  S.niche = '';
+  S.step = 1;
+  _updateClientHeader();
+  render();
+}
+
+async function apiFetch(path, options = {}) {
+  const headers = { ...(options.headers || {}) };
+  if (S.client) {
+    headers['X-Client-Id'] = S.client.id;
+    headers['X-Client-Password'] = S.client.password;
+  }
+  const res = await fetch(path, { ...options, headers });
+  if (res.status === 401) {
+    alert('Session expired or invalid credentials. Please log in again.');
+    clearClient();
+    throw new Error('unauthorized');
+  }
+  return res;
+}
+
+async function fetchClientsCatalog() {
+  try {
+    const r = await fetch('/api/clients');
+    const j = await r.json();
+    _clientsCatalog = j.clients || [];
+  } catch (e) {
+    _clientsCatalog = [];
+  }
+}
+
+async function attemptLogin(clientId, password) {
+  const r = await fetch('/api/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ client_id: clientId, password })
+  });
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({}));
+    throw new Error(e.error || 'Login failed');
+  }
+  const j = await r.json();
+  const c = { ...j.client, password };
+  S.client = c;
+  saveStoredClient(c);
+  S.niche = 'client';
+  S.length = c.default_length || 8;
+  S.language = c.default_language || 'English';
+  S.step = 2;
+  _updateClientHeader();
+  render();
+}
+
+function renderLogin() {
+  const opts = _clientsCatalog.map(c => `
+    <div class="client-card${_loginClientId === c.id ? ' selected' : ''}" onclick="_selectLoginClient('${c.id}')" id="lc-${c.id}">
+      <div class="client-card-name">${esc(c.name)}</div>
+      <div class="client-card-niche">${esc(c.niche)}</div>
+    </div>
+  `).join('');
+  return `
+    <section class="card" style="max-width:560px;margin:40px auto">
+      <h1 style="margin:0 0 6px;font-size:22px">Welcome</h1>
+      <p class="hint" style="margin:0 0 18px">Pick a client profile, then enter the password.</p>
+      <div class="client-grid">${opts || '<div class="hint" style="padding:14px">No clients configured yet.</div>'}</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
+        <input type="password" id="login-pw" placeholder="Password" autocomplete="current-password"
+               style="background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:13px 14px;color:var(--cream);font-size:14px;outline:none"
+               onkeydown="if(event.key==='Enter')_submitLogin()"/>
+        <button class="btn-primary" onclick="_submitLogin()" style="margin-top:4px">Log in →</button>
+        <div id="login-err" style="display:none;color:#ff7e7e;font-size:13px;margin-top:4px"></div>
+      </div>
+    </section>
+  `;
+}
+
+function _selectLoginClient(id) {
+  _loginClientId = id;
+  document.querySelectorAll('.client-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('lc-' + id)?.classList.add('selected');
+  document.getElementById('login-pw')?.focus();
+}
+
+async function _submitLogin() {
+  const pw = document.getElementById('login-pw')?.value || '';
+  const errEl = document.getElementById('login-err');
+  if (!_loginClientId) { errEl.textContent = 'Pick a client first.'; errEl.style.display = 'block'; return; }
+  if (!pw) { errEl.textContent = 'Enter the password.'; errEl.style.display = 'block'; return; }
+  errEl.style.display = 'none';
+  try {
+    await attemptLogin(_loginClientId, pw);
+  } catch (e) {
+    errEl.textContent = e.message || 'Login failed';
+    errEl.style.display = 'block';
+  }
+}
+
+function _updateClientHeader() {
+  const bar = document.getElementById('client-bar');
+  if (!bar) return;
+  if (S.client) {
+    bar.style.display = 'flex';
+    bar.innerHTML = `
+      <span class="client-badge">${esc(S.client.name)}</span>
+      <button class="btn-logout" onclick="clearClient()">Logout</button>
+    `;
+  } else {
+    bar.style.display = 'none';
+    bar.innerHTML = '';
+  }
+}
+
+const LANGUAGES = [
+  {code:'English',   flag:'🌐'},
+  {code:'Spanish',   flag:'🇪🇸'},
+  {code:'French',    flag:'🇫🇷'},
+  {code:'Portuguese',flag:'🇵🇹'},
+  {code:'German',    flag:'🇩🇪'},
+  {code:'Italian',   flag:'🇮🇹'},
+  {code:'Turkish',   flag:'🇹🇷'},
+  {code:'Arabic',    flag:'🇸🇦'},
+];
 
 const NICHES = [
   {id:'content-creator', label:'Content Creator', icon:'🎥'},
@@ -501,6 +746,11 @@ function defaultCustom(slide) {
 // ═══════════════════════════════════════════════════════════════
 function render() {
   const app = document.getElementById('app');
+  if (!S.client) {
+    app.innerHTML = renderLogin();
+    document.querySelectorAll('.step-dot').forEach(d => d.classList.remove('done', 'active'));
+    return;
+  }
   // update step dots
   const dots = document.querySelectorAll('.step-dot');
   dots.forEach((d,i)=>{
@@ -545,6 +795,7 @@ function confirmNiche() {
   S.step=2; render();
 }
 function getNicheLabel() {
+  if(S.client) return S.client.niche || 'Creator';
   if(S.niche==='other') return S.nicheCustom||'Creator';
   return NICHES.find(n=>n.id===S.niche)?.label||'Creator';
 }
@@ -563,19 +814,30 @@ function renderStory() {
   let panel = '';
   if(S.mode==='inspire') {
     if(S.inspireStep===1) {
+      const researchPill = S.researchData ? `
+        <div class="research-pill" style="margin-top:10px">
+          <span>◉</span> Research loaded for <strong>${getNicheLabel()}</strong> — angles will be trend-informed
+        </div>` : '';
       panel = `
         <div class="card">
           <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Story Topic</div>
           <input type="text" id="inspire-topic" placeholder="e.g. why most ${getNicheLabel().toLowerCase()} content fails…" value="${esc(S.inspireTopic)}" onkeydown="if(event.key==='Enter')getIdeas()"/>
           <div class="err" id="inspire-err"></div>
+          ${researchPill}
         </div>
         <div style="height:12px"></div>
-        <button class="btn btn-primary" id="btn-ideas" onclick="getIdeas()">Get 6 Story Angles</button>`;
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" id="btn-ideas" onclick="getIdeas()" style="flex:1">Get 6 Story Angles</button>
+          <button class="btn-research" id="btn-research" onclick="runResearch()" title="Research current trends for ${getNicheLabel()}">
+            ${S.researchData ? '◉ Re-Research' : '🔍 Research'}
+          </button>
+        </div>`;
     } else {
       const ideaCards = S.ideas.map((idea,i)=>`
         <div class="idea-card${S.selectedAngle===i?' selected':''}" onclick="selectIdea(${i})">
           <div class="idea-title">${esc(idea.title)}</div>
           <div class="idea-hook">"${esc(idea.hook)}"</div>
+          ${S.researchInformed ? '<div class="research-badge">Research Informed</div>' : ''}
         </div>`).join('');
       panel = `
         <div class="card">
@@ -599,10 +861,23 @@ function renderStory() {
       <button class="btn btn-primary" onclick="startGenerate('braindump')">Generate Script</button>`;
   }
 
+  const voiceBanner = S.voiceProfile ? `
+    <div class="voice-active-banner">
+      <span class="vab-text">◈ Voice Profile active — "${S.voiceProfile.tone}"</span>
+      <div class="vab-toggle-wrap">
+        <span>Use it</span>
+        <label class="toggle-sw">
+          <input type="checkbox" ${S.useVoice?'checked':''} onchange="S.useVoice=this.checked"/>
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+    </div>` : '';
+
   return `
     <button class="back-btn" onclick="S.step=1;render()">← ${getNicheLabel()}</button>
     <div class="section-title">Write Your Story</div>
     <div class="section-sub">Generating for: <strong style="color:var(--orange)">${getNicheLabel()}</strong></div>
+    ${voiceBanner}
     <div class="mode-toggle">
       <button class="mode-btn${S.mode==='inspire'?' active':''}" onclick="switchMode('inspire')">✨ Inspire Me</button>
       <button class="mode-btn${S.mode==='braindump'?' active':''}" onclick="switchMode('braindump')">🧠 Brain Dump</button>
@@ -653,13 +928,15 @@ async function getIdeas() {
   const btn = document.getElementById('btn-ideas');
   if(btn){btn.disabled=true;btn.textContent='Generating ideas…';}
   try {
-    const res = await fetch('/api/inspire', {
+    const researchContext = S.researchData?.inject || '';
+    const res = await apiFetch('/api/inspire', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({topic, niche: getNicheLabel()})
+      body: JSON.stringify({topic, niche: getNicheLabel(), researchContext})
     });
     if(!res.ok) throw new Error('Request failed');
     const {ideas} = await res.json();
     S.ideas = ideas||[];
+    S.researchInformed = !!researchContext;
     S.inspireStep = 2;
     S.selectedAngle = null;
     render();
@@ -696,9 +973,10 @@ async function startGenerate(mode) {
   if(loading){loading.classList.add('show');document.getElementById('loading-label').textContent = mode==='braindump'?'Transforming your thoughts…':'Writing your story…';}
 
   try {
-    const res = await fetch('/api/generate', {
+    const voiceStyle = (S.useVoice && S.voiceProfile?.prompt_injection) ? S.voiceProfile.prompt_injection : '';
+    const res = await apiFetch('/api/generate', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({mode, input, length: S.length, niche: getNicheLabel()})
+      body: JSON.stringify({mode, input, length: S.length, niche: getNicheLabel(), voiceStyle})
     });
     const reader = res.body.getReader();
     const dec = new TextDecoder();
@@ -722,6 +1000,8 @@ async function startGenerate(mode) {
     if(!slides||!slides.length) throw new Error('No slides returned');
     S.slides = slides;
     S.customizations = slides.map(sl=>defaultCustom(sl));
+    S.originalCustomizations = null;
+    S.language = 'English';
     S.activeSlide = 0;
     S.selectedWord = null;
     // Derive 1-2 word slug for file naming
@@ -833,6 +1113,16 @@ function renderDesign() {
     <button class="back-btn" onclick="S.step=3;render()">← Image</button>
     <div class="section-title">Design Your Slides</div>
     <div class="section-sub">Edit text and styles — export 1080×1920 PNGs, no labels or branding.</div>
+
+    <div class="lang-bar">
+      <span class="lang-label">Language</span>
+      <select class="lang-select" onchange="setLanguage(this.value)" id="lang-select">
+        ${LANGUAGES.map(l=>`<option value="${l.code}" ${S.language===l.code?'selected':''}>${l.flag} ${l.code}</option>`).join('')}
+      </select>
+      ${S.originalCustomizations ? `<button class="btn-restore" onclick="restoreOriginal()">↩ Restore English</button>` : ''}
+      <div class="translate-spinner" id="translate-spinner"></div>
+    </div>
+
     <div class="studio-layout">
 
       <!-- LEFT: Slide list -->
@@ -1275,7 +1565,7 @@ async function autoHighlight() {
   const custom = S.customizations[S.activeSlide];
   const text = (custom.headline||'')+' '+(custom.body||'');
   try {
-    const res = await fetch('/api/highlight', {
+    const res = await apiFetch('/api/highlight', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({text, color: S.hlColor})
     });
@@ -1304,6 +1594,352 @@ function resetTextScale() {
   const slider = document.getElementById('vslider');
   if(slider) slider.value = 100;
   renderCanvas();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LANGUAGE / TRANSLATE
+// ═══════════════════════════════════════════════════════════════
+async function setLanguage(lang) {
+  if(lang === S.language) return;
+  if(lang === 'English') { restoreOriginal(); return; }
+
+  // Back up originals before first translation
+  if(!S.originalCustomizations) {
+    S.originalCustomizations = S.customizations.map(c=>JSON.parse(JSON.stringify(c)));
+  }
+
+  const spinner = document.getElementById('translate-spinner');
+  const sel = document.getElementById('lang-select');
+  if(spinner) spinner.style.display='block';
+  if(sel) sel.disabled=true;
+
+  try {
+    // Build plain slide objects from current (English) originals
+    const source = S.originalCustomizations.map((c,i)=>({
+      type: S.slides[i]?.type||'value',
+      headline: c.headline,
+      body: c.body,
+      direction: S.slides[i]?.direction||''
+    }));
+    const res = await apiFetch('/api/translate', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({slides: source, language: lang, niche: getNicheLabel()})
+    });
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+    data.slides.forEach((sl,i)=>{
+      if(S.customizations[i]) {
+        S.customizations[i].headline = sl.headline||S.customizations[i].headline;
+        S.customizations[i].body = sl.body||S.customizations[i].body;
+      }
+    });
+    S.language = lang;
+    render();
+  } catch(e) {
+    showToast('Translation failed: '+e.message);
+    if(sel){ sel.value = S.language; sel.disabled=false; }
+    if(spinner) spinner.style.display='none';
+  }
+}
+
+function restoreOriginal() {
+  if(!S.originalCustomizations) return;
+  S.customizations = S.originalCustomizations.map(c=>JSON.parse(JSON.stringify(c)));
+  S.originalCustomizations = null;
+  S.language = 'English';
+  render();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MARKET RESEARCH
+// ═══════════════════════════════════════════════════════════════
+async function runResearch() {
+  const btn = document.getElementById('btn-research');
+  const topic = document.getElementById('inspire-topic')?.value.trim()||'';
+  if(btn){ btn.disabled=true; btn.innerHTML='⏳ Researching…'; }
+  try {
+    const res = await apiFetch('/api/research', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({niche: getNicheLabel(), topic})
+    });
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+    S.researchData = data.research;
+    render();
+    showToast('Research complete — angles will now be trend-informed');
+  } catch(e) {
+    showToast('Research failed: '+e.message);
+    if(btn){ btn.disabled=false; btn.innerHTML='🔍 Research'; }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// VOICE PROFILE MODAL
+// ═══════════════════════════════════════════════════════════════
+let _voiceTab = 'questions'; // 'questions' | 'paste' | 'record'
+let _mediaRecorder = null;
+let _recognition = null;
+let _isRecording = false;
+let _transcript = '';
+
+function openVoiceModal() {
+  const overlay = document.getElementById('voice-modal');
+  if(!overlay) return;
+  overlay.style.display = 'flex';
+  overlay.innerHTML = _buildVoiceModalHtml();
+  _updateVoiceHeaderBtn();
+}
+
+function closeVoiceModal() {
+  const overlay = document.getElementById('voice-modal');
+  if(overlay) overlay.style.display='none';
+  if(_isRecording) stopRecording();
+}
+
+function _updateVoiceHeaderBtn() {
+  const btn = document.getElementById('btn-my-voice');
+  const lbl = document.getElementById('voice-btn-label');
+  if(!btn||!lbl) return;
+  if(S.voiceProfile) {
+    btn.classList.add('has-profile');
+    lbl.textContent = 'My Voice ✓';
+  } else {
+    btn.classList.remove('has-profile');
+    lbl.textContent = 'My Voice';
+  }
+}
+
+function _buildVoiceModalHtml() {
+  const profileSection = S.voiceProfile ? `
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Your Current Voice Profile</div>
+      <div class="voice-profile-card">
+        <div class="vp-trait"><span class="vp-key">Tone</span><span class="vp-val">${esc(S.voiceProfile.tone||'')}</span></div>
+        <div class="vp-trait"><span class="vp-key">Rhythm</span><span class="vp-val">${esc(S.voiceProfile.rhythm||'')}</span></div>
+        <div class="vp-trait"><span class="vp-key">Vocabulary</span><span class="vp-val">${esc(S.voiceProfile.vocabulary||'')}</span></div>
+        <div class="vp-trait"><span class="vp-key">Energy</span><span class="vp-val">${esc(S.voiceProfile.energy||'')}</span></div>
+        <div class="vp-note">${esc(S.voiceProfile.style_notes||'')}</div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--muted)">Apply to story generation</span>
+          <label class="toggle-sw">
+            <input type="checkbox" ${S.useVoice?'checked':''} onchange="S.useVoice=this.checked;S.voiceProfile&&_refreshVoiceToggle(this.checked)"/>
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <button onclick="deleteVoiceProfile();openVoiceModal()" style="background:none;border:none;color:#EF4444;font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;cursor:pointer">Delete Profile</button>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:12px;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Update Voice Profile</div>
+    </div>` : '';
+
+  const tabs = `
+    <div class="voice-tabs">
+      <div class="voice-tab${_voiceTab==='questions'?' active':''}" onclick="_switchVoiceTab('questions')">
+        <div class="voice-tab-icon">💬</div>
+        <div class="voice-tab-label">Quick Questions</div>
+      </div>
+      <div class="voice-tab${_voiceTab==='paste'?' active':''}" onclick="_switchVoiceTab('paste')">
+        <div class="voice-tab-icon">📋</div>
+        <div class="voice-tab-label">Paste Anything</div>
+      </div>
+      <div class="voice-tab${_voiceTab==='record'?' active':''}" onclick="_switchVoiceTab('record')">
+        <div class="voice-tab-icon">🎙</div>
+        <div class="voice-tab-label">Voice Note</div>
+      </div>
+    </div>`;
+
+  const questionsPane = `
+    <div class="voice-pane${_voiceTab==='questions'?' active':''}">
+      <div>
+        <div class="voice-q-label">1. What do you do and who do you help — explain it like you're at a bar?</div>
+        <textarea class="slide-textarea" id="vq1" rows="3" placeholder="Just type naturally, like you're texting a friend…"></textarea>
+      </div>
+      <div>
+        <div class="voice-q-label">2. What's a hot take you have about your industry?</div>
+        <textarea class="slide-textarea" id="vq2" rows="3" placeholder="The opinion your peers might cringe at…"></textarea>
+      </div>
+      <div>
+        <div class="voice-q-label">3. What's something you say all the time that your friends would recognise?</div>
+        <textarea class="slide-textarea" id="vq3" rows="3" placeholder="A phrase, a rant opener, a sign-off…"></textarea>
+      </div>
+      <div id="voice-err-q" class="err"></div>
+      <button class="btn btn-primary" onclick="analyseVoiceQuestions()">Find My Voice →</button>
+    </div>`;
+
+  const pastePane = `
+    <div class="voice-pane${_voiceTab==='paste'?' active':''}">
+      <div style="font-size:12px;color:var(--muted);line-height:1.5">Paste anything you've written or said — a caption, WhatsApp message, email, call transcript, even a text message works.</div>
+      <textarea class="slide-textarea" id="vpaste" rows="8" placeholder="Paste your writing here…" style="min-height:180px"></textarea>
+      <div id="voice-err-p" class="err"></div>
+      <button class="btn btn-primary" onclick="analyseVoicePaste()">Find My Voice →</button>
+    </div>`;
+
+  const recordPane = `
+    <div class="voice-pane${_voiceTab==='record'?' active':''}">
+      <div style="font-size:12px;color:var(--muted);line-height:1.5">Record yourself talking naturally — about what you do, your opinions, your style. Just speak for 30–60 seconds.</div>
+      <button class="btn-record" id="btn-record" onclick="toggleRecording()">
+        <span class="record-dot"></span>
+        <span id="record-label">Start Recording</span>
+      </button>
+      <div class="voice-transcript" id="voice-transcript" style="display:none"></div>
+      <div id="voice-err-r" class="err"></div>
+      <button class="btn btn-primary" id="btn-analyse-record" onclick="analyseVoiceTranscript()" style="display:none">Find My Voice →</button>
+    </div>`;
+
+  const analysing = `<div id="voice-analysing" style="display:none;text-align:center;padding:20px"><div class="spinner"></div><div style="font-size:13px;color:var(--muted);margin-top:8px">Analysing your voice…</div></div>`;
+
+  return `
+    <div class="modal-sheet">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between">
+        <div>
+          <div class="modal-title">Find My Voice</div>
+          <div class="modal-sub">Build a voice profile so every story sounds like you wrote it.</div>
+        </div>
+        <button class="modal-close" onclick="closeVoiceModal()">✕</button>
+      </div>
+      ${profileSection}
+      ${tabs}
+      ${questionsPane}
+      ${pastePane}
+      ${recordPane}
+      ${analysing}
+    </div>`;
+}
+
+function _switchVoiceTab(tab) {
+  _voiceTab = tab;
+  const overlay = document.getElementById('voice-modal');
+  if(overlay) overlay.innerHTML = _buildVoiceModalHtml();
+}
+
+function _refreshVoiceToggle(checked) {
+  S.useVoice = checked;
+  _updateVoiceHeaderBtn();
+}
+
+async function _sendForVoiceAnalysis(text, errId) {
+  const errEl = document.getElementById(errId);
+  const analysing = document.getElementById('voice-analysing');
+  if(analysing) analysing.style.display='block';
+  // Hide all panes
+  document.querySelectorAll('.voice-pane').forEach(p=>p.style.display='none');
+  try {
+    const res = await apiFetch('/api/voice', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({text})
+    });
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+    saveVoiceProfile(data.profile);
+    S.useVoice = true;
+    openVoiceModal(); // Rebuild with profile shown
+    _updateVoiceHeaderBtn();
+  } catch(e) {
+    if(analysing) analysing.style.display='none';
+    document.querySelectorAll('.voice-pane').forEach(p=>p.style.display='');
+    if(errEl){errEl.textContent=e.message;errEl.classList.add('show');}
+  }
+}
+
+async function analyseVoiceQuestions() {
+  const q1 = document.getElementById('vq1')?.value.trim()||'';
+  const q2 = document.getElementById('vq2')?.value.trim()||'';
+  const q3 = document.getElementById('vq3')?.value.trim()||'';
+  if(!q1&&!q2&&!q3){
+    const e=document.getElementById('voice-err-q');
+    if(e){e.textContent='Answer at least one question.';e.classList.add('show');}
+    return;
+  }
+  const text = `Q1 — What I do and who I help:\n${q1}\n\nQ2 — My hot take:\n${q2}\n\nQ3 — Things I always say:\n${q3}`;
+  await _sendForVoiceAnalysis(text, 'voice-err-q');
+}
+
+async function analyseVoicePaste() {
+  const text = document.getElementById('vpaste')?.value.trim()||'';
+  if(!text){
+    const e=document.getElementById('voice-err-p');
+    if(e){e.textContent='Please paste some text first.';e.classList.add('show');}
+    return;
+  }
+  await _sendForVoiceAnalysis(text, 'voice-err-p');
+}
+
+async function analyseVoiceTranscript() {
+  if(!_transcript){
+    const e=document.getElementById('voice-err-r');
+    if(e){e.textContent='No transcript yet — record first.';e.classList.add('show');}
+    return;
+  }
+  await _sendForVoiceAnalysis(_transcript, 'voice-err-r');
+}
+
+function toggleRecording() {
+  if(_isRecording) { stopRecording(); return; }
+  startRecording();
+}
+
+function startRecording() {
+  _transcript = '';
+  const transcriptEl = document.getElementById('voice-transcript');
+  const btn = document.getElementById('btn-record');
+  const lbl = document.getElementById('record-label');
+  const analyseBtn = document.getElementById('btn-analyse-record');
+
+  // Try Web Speech API first
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(SR) {
+    _recognition = new SR();
+    _recognition.continuous = true;
+    _recognition.interimResults = true;
+    _recognition.lang = 'en-US';
+    _recognition.onresult = (e) => {
+      let interim='', final='';
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        if(e.results[i].isFinal) final+=e.results[i][0].transcript+' ';
+        else interim+=e.results[i][0].transcript;
+      }
+      _transcript = (_transcript+final).trim();
+      if(transcriptEl){ transcriptEl.style.display='block'; transcriptEl.textContent=_transcript+(interim?' …'+interim:''); }
+    };
+    _recognition.onerror = (e) => {
+      const errEl = document.getElementById('voice-err-r');
+      if(errEl){errEl.textContent='Mic error: '+e.error;errEl.classList.add('show');}
+      stopRecording();
+    };
+    _recognition.onend = () => { if(_isRecording) _recognition.start(); }; // Keep going until stopped
+    _recognition.start();
+    _isRecording = true;
+    if(btn) btn.classList.add('recording');
+    if(lbl) lbl.textContent='Stop Recording';
+  } else {
+    // Fallback: just show a textarea for manual entry
+    const errEl = document.getElementById('voice-err-r');
+    if(transcriptEl){
+      transcriptEl.style.display='block';
+      transcriptEl.contentEditable='true';
+      transcriptEl.textContent='Speech recognition not supported in this browser. Type your transcript here…';
+    }
+    if(errEl){errEl.textContent='Microphone transcription not supported — type directly in the box above.';errEl.classList.add('show');}
+    if(analyseBtn) analyseBtn.style.display='block';
+  }
+}
+
+function stopRecording() {
+  _isRecording = false;
+  if(_recognition){ _recognition.onend=null; _recognition.stop(); _recognition=null; }
+  const btn = document.getElementById('btn-record');
+  const lbl = document.getElementById('record-label');
+  const analyseBtn = document.getElementById('btn-analyse-record');
+  const transcriptEl = document.getElementById('voice-transcript');
+  if(btn) btn.classList.remove('recording');
+  if(lbl) lbl.textContent='Start Recording';
+  if(_transcript && analyseBtn) analyseBtn.style.display='block';
+  // Allow manual editing of transcript
+  if(transcriptEl && _transcript) {
+    transcriptEl.contentEditable='true';
+    transcriptEl.oninput=()=>{ _transcript=transcriptEl.textContent||''; };
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1417,12 +2053,21 @@ function drawTextLines(ctx,lines,wordFormats,startY,padX,maxW,W,defaultColor,def
     const words=line.split(' ');
     let startX=padX;
     if(align!=='left'){
-      ctx.font=`${defaultWeight} ${fontSize}px ${fontFam}`;
-      const lw=ctx.measureText(line).width;
+      // Accurate per-word measurement accounting for individual weights and caps
+      let lw=0;
+      for(let wi=0;wi<words.length;wi++){
+        const wclean=words[wi].replace(/[^a-zA-Z0-9']/g,'').toLowerCase();
+        const wfmt=wordFormats?.[wclean]||{};
+        const wdrawn=wfmt.caps?words[wi].toUpperCase():words[wi];
+        ctx.font=`${wfmt.weight||defaultWeight} ${fontSize}px ${fontFam}`;
+        lw+=ctx.measureText(wdrawn).width;
+        if(wi<words.length-1){ctx.font=`${defaultWeight} ${fontSize}px ${fontFam}`;lw+=ctx.measureText(' ').width;}
+      }
       startX=align==='center'?(W-lw)/2:W-padX-lw;
     }
     let curX=startX;
-    for(const word of words){
+    for(let wi=0;wi<words.length;wi++){
+      const word=words[wi];
       const clean=word.replace(/[^a-zA-Z0-9']/g,'').toLowerCase();
       const fmt=wordFormats?.[clean]||{};
       const weight=fmt.weight||defaultWeight;
@@ -1431,7 +2076,9 @@ function drawTextLines(ctx,lines,wordFormats,startY,padX,maxW,W,defaultColor,def
       ctx.font=`${weight} ${fontSize}px ${fontFam}`;
       ctx.fillStyle=color;
       ctx.fillText(drawn,curX,curY+fontSize);
-      curX+=ctx.measureText(drawn+' ').width;
+      const wordW=ctx.measureText(drawn).width;
+      if(wi<words.length-1){ctx.font=`${defaultWeight} ${fontSize}px ${fontFam}`;curX+=wordW+ctx.measureText(' ').width;}
+      else curX+=wordW;
     }
     curY+=lineH;
   }
@@ -1497,7 +2144,20 @@ function escAttr(s){return String(s||'').replace(/'/g,"\\'");}
 // ═══════════════════════════════════════════════════════════════
 // BOOT
 // ═══════════════════════════════════════════════════════════════
-render();
+(async function boot() {
+  await fetchClientsCatalog();
+  const stored = loadStoredClient();
+  if (stored) {
+    S.client = stored;
+    S.niche = 'client';
+    S.length = stored.default_length || S.length;
+    S.language = stored.default_language || S.language;
+    if (S.step === 1) S.step = 2;
+  }
+  _updateClientHeader();
+  render();
+  setTimeout(_updateVoiceHeaderBtn, 0);
+})();
 </script>
 </body>
 </html>

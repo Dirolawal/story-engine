@@ -1,0 +1,9 @@
+{
+  "id": "asli",
+  "name": "Aslı Üstündal",
+  "niche": "Personal transformation coach for Turkish-speaking women",
+  "default_length": 8,
+  "default_language": "Turkish",
+  "trigger_words": ["HİZA", "PORTAL"],
+  "password_env": "ASLI_PASSWORD"
+}

@@ -1,0 +1,9 @@
+{
+  "id": "deborah",
+  "name": "Deborah",
+  "niche": "High-ticket sales coach for women",
+  "default_length": 8,
+  "default_language": "English",
+  "trigger_words": ["WAITLIST", "READY"],
+  "password_env": "DEBORAH_PASSWORD"
+}
