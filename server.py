@@ -31,7 +31,12 @@ def load_clients():
             continue
         try:
             cfg = json.loads(cfg_path.read_text(encoding='utf-8'))
-            cfg['context'] = ctx_path.read_text(encoding='utf-8')
+            context = ctx_path.read_text(encoding='utf-8')
+            bible_path = folder / 'story-bible.md'
+            if bible_path.exists():
+                context += '\n\n---\n\n# Story Bible (Full Chapter Reference)\n\n'
+                context += bible_path.read_text(encoding='utf-8')
+            cfg['context'] = context
             registry[cfg['id']] = cfg
         except Exception as e:
             print(f'Failed to load client {folder.name}: {e}')
@@ -100,7 +105,14 @@ def build_system_message(client_context, niche):
         f'relate=empathy/shared experience, shift=new perspective turning point, '
         f'value=core insight/tip, proof=result or credibility, cta=one clear specific action. '
         f'Rules: headline max 8 words punchy; body 2-3 short conversational sentences; '
-        f'direction=1 brief visual/mood note for designer.'
+        f'direction=1 brief visual/mood note for designer. '
+        f'\n\nNON-NEGOTIABLE: the client context above defines HARD BANS, ICP filters, voice rules, '
+        f'and (when present) a 9-question hook scoring framework. Apply all of them verbatim. '
+        f'If the client bans em-dashes, verify every headline, body, and direction is em-dash free '
+        f'before returning. If the client defines a hook scoring framework, score the hook slide '
+        f'and put the score breakdown in the hook slide\'s direction field. '
+        f'If the client defines an ICP, reject angles that target the wrong audience. '
+        f'Pull receipts from the client credibility vault and story bible. Do not invent facts.'
     )
     blocks = []
     if client_context:
