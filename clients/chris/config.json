@@ -1,0 +1,9 @@
+{
+  "id": "chris",
+  "name": "Chris Allen",
+  "niche": "Transformation coach (mind, body, sovereignty) for 20s-30s men",
+  "default_length": 8,
+  "default_language": "English",
+  "trigger_words": ["SOVEREIGN", "AMOR FATI", "JACK"],
+  "password_env": "CHRIS_PASSWORD"
+}
