@@ -385,6 +385,23 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:3px}
 .hltoken.is-hl{font-weight:700}
 .hl-actions{display:flex;gap:6px;flex-wrap:wrap}
 
+/* ── MULTI-PHOTO MEDIA LIBRARY ── */
+.media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin:14px 0}
+.media-tile{position:relative;border-radius:10px;overflow:hidden;aspect-ratio:9/16;background:var(--surface2);border:1.5px solid var(--border)}
+.media-tile img,.media-tile video{width:100%;height:100%;object-fit:cover;display:block}
+.media-tile-idx{position:absolute;top:6px;left:6px;background:rgba(0,0,0,.7);color:var(--cream);font-size:10px;font-weight:700;padding:3px 7px;border-radius:4px;letter-spacing:.04em}
+.media-tile-del{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.7);color:var(--cream);width:22px;height:22px;border-radius:50%;border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;padding:0}
+.media-tile-del:hover{background:#EF4444}
+.media-count-line{font-size:12px;color:var(--cream2);margin:4px 0 8px}
+.bg-strip{display:flex;gap:8px;overflow-x:auto;padding:6px 2px;scrollbar-width:thin}
+.bg-thumb{flex:0 0 auto;width:48px;height:72px;border-radius:7px;overflow:hidden;border:2px solid var(--border);cursor:pointer;position:relative;background:var(--surface2);transition:all .15s}
+.bg-thumb:hover{border-color:var(--border2)}
+.bg-thumb img,.bg-thumb video{width:100%;height:100%;object-fit:cover;display:block}
+.bg-thumb.selected{border-color:var(--orange);box-shadow:0 0 0 1px var(--orange)}
+.bg-thumb-none{display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--cream2);text-align:center;line-height:1.2;font-weight:600;letter-spacing:.03em}
+.bg-strip-add{flex:0 0 auto;width:48px;height:72px;border-radius:7px;border:1.5px dashed var(--border2);background:var(--surface2);color:var(--cream2);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.bg-strip-add:hover{border-color:var(--orange);color:var(--orange)}
+
 /* ── CLIENT LOGIN + BADGE ── */
 #client-bar{display:none;align-items:center;gap:8px}
 .client-badge{background:var(--orange-dim);color:var(--orange);border:1px solid var(--orange);border-radius:999px;padding:5px 12px;font-size:12px;font-weight:700;letter-spacing:.03em}
@@ -433,6 +450,8 @@ const S = {
   niche: '',
   nicheCustom: '',
   mode: 'inspire',
+  format: 'carousel',      // 'carousel' | 'story' (IG story sequence)
+  storyType: 'conversion', // 'conversion' | 'nurture' | 'authority'
   inspireStep: 1,   // 1=topic 2=pick-angle
   inspireTopic: '',
   ideas: [],
@@ -444,9 +463,7 @@ const S = {
   hlCaps: false,      // caps-lock toggle for word highlight
   length: 7,
   slides: [],
-  bgDataURL: null,
-  bgIsVideo: false,
-  bgEl: null,
+  mediaLibrary: [],   // [{dataURL, isVideo, el}] — backgrounds uploaded in step 3
   activeSlide: 0,
   customizations: [],
   // Language
@@ -702,7 +719,63 @@ const TYPE_META = {
   value:  {label:'Value',  emoji:'💎', c:'value'},
   proof:  {label:'Proof',  emoji:'✅', c:'proof'},
   cta:    {label:'CTA',    emoji:'📲', c:'cta'},
+  // story-sequence types
+  story:      {label:'Story',     emoji:'📖', c:'relate'},
+  antisell:   {label:'Anti-Sell', emoji:'🚫', c:'shift'},
+  icp:        {label:'ICP + Pain',emoji:'🎯', c:'pain'},
+  scarcity:   {label:'Scarcity',  emoji:'⏳', c:'hook'},
+  lesson:     {label:'Lesson',    emoji:'💡', c:'value'},
+  reflection: {label:'Reflection',emoji:'🪞', c:'cta'},
+  entertain:  {label:'Entertain', emoji:'😂', c:'relate'},
+  wholesome:  {label:'Wholesome', emoji:'🧡', c:'value'},
+  authority:  {label:'Authority', emoji:'👑', c:'proof'},
+  signature:  {label:'Signature', emoji:'✦',  c:'shift'},
+  ender:      {label:'Real One',  emoji:'🤝', c:'cta'},
 };
+
+// ─── Instagram story sequence plans (must mirror server.py) ───
+const STORY_PLANS = {
+  conversion: {
+    6:['hook','story','antisell','icp','proof','cta'],
+    7:['hook','story','story','antisell','icp','proof','cta'],
+    8:['hook','story','story','authority','antisell','icp','proof','cta'],
+    9:['hook','story','story','authority','antisell','icp','scarcity','proof','cta'],
+    10:['hook','story','story','story','authority','antisell','icp','scarcity','proof','cta'],
+    11:['hook','story','story','story','authority','antisell','icp','scarcity','proof','proof','cta'],
+    12:['hook','story','story','story','story','authority','antisell','icp','scarcity','proof','proof','cta'],
+  },
+  nurture: {
+    4:['hook','story','lesson','reflection'],
+    5:['hook','story','story','lesson','reflection'],
+    6:['hook','story','story','lesson','lesson','reflection'],
+    7:['hook','story','story','story','lesson','lesson','reflection'],
+    8:['hook','story','story','story','lesson','lesson','lesson','reflection'],
+  },
+  authority: {
+    6:['hook','entertain','proof','wholesome','authority','ender'],
+    7:['hook','entertain','proof','wholesome','authority','signature','ender'],
+    8:['hook','entertain','proof','wholesome','authority','signature','proof','ender'],
+    9:['hook','entertain','proof','wholesome','authority','signature','proof','wholesome','ender'],
+    10:['hook','entertain','proof','wholesome','authority','signature','proof','wholesome','authority','ender'],
+    11:['hook','entertain','proof','wholesome','authority','signature','proof','wholesome','authority','entertain','ender'],
+    12:['hook','entertain','proof','wholesome','authority','signature','proof','wholesome','authority','entertain','proof','ender'],
+  },
+};
+const STORY_RANGES = {conversion:[6,12], nurture:[4,8], authority:[6,12]};
+const STORY_TYPE_INFO = {
+  conversion: {label:'Conversion', emoji:'💸', desc:'The launch. 7 principles, anti-sell, real scarcity, 3-second CTA.'},
+  nurture:    {label:'Nurture',    emoji:'🌱', desc:'Deep story, zero selling. Builds the goodwill you cash in later.'},
+  authority:  {label:'Recap Dump', emoji:'👑', desc:'Pillar rotation recap. Never two of the same back to back.'},
+};
+
+function currentPlan() {
+  if(S.format==='story') {
+    const [lo,hi] = STORY_RANGES[S.storyType];
+    const len = Math.max(lo, Math.min(hi, S.length));
+    return STORY_PLANS[S.storyType][len];
+  }
+  return SLIDE_PLANS[S.length]||SLIDE_PLANS[7];
+}
 
 const FONTS = [
   {id:'inter',    label:'Inter',    css:"'Inter', sans-serif",        preview:'Aa'},
@@ -738,6 +811,11 @@ function defaultCustom(slide) {
     position: 'center',
     textShadow: true,
     overlayOpacity: 0.62,
+    dividerColor: '#FF6B00',
+    dividerWidth: 70,
+    dividerThickness: 3,
+    dividerOffsetX: 0,
+    mediaIndex: null,  // index into S.mediaLibrary, or null for no background
   };
 }
 
@@ -804,7 +882,7 @@ function getNicheLabel() {
 // STEP 2: STORY
 // ═══════════════════════════════════════════════════════════════
 function renderStory() {
-  const plan = SLIDE_PLANS[S.length]||SLIDE_PLANS[7];
+  const plan = currentPlan();
   const legend = [...new Set(plan)].map(t=>{
     const m = TYPE_META[t];
     return `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--muted)">
@@ -879,6 +957,23 @@ function renderStory() {
     <div class="section-sub">Generating for: <strong style="color:var(--orange)">${getNicheLabel()}</strong></div>
     ${voiceBanner}
     <div class="mode-toggle">
+      <button class="mode-btn${S.format==='carousel'?' active':''}" onclick="switchFormat('carousel')">🖼 Carousel</button>
+      <button class="mode-btn${S.format==='story'?' active':''}" onclick="switchFormat('story')">📱 Story Sequence</button>
+    </div>
+    ${S.format==='story' ? `
+    <div class="card" style="margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Sequence Type</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        ${Object.entries(STORY_TYPE_INFO).map(([k,v])=>`
+          <button class="mode-btn${S.storyType===k?' active':''}" style="flex-direction:column;padding:10px 6px;background:${S.storyType===k?'var(--surface3)':'var(--surface2)'};border:1.5px solid ${S.storyType===k?'var(--orange)':'var(--border)'};border-radius:10px"
+            onclick="switchStoryType('${k}')">
+            <span style="font-size:16px">${v.emoji}</span>
+            <span style="font-size:12px">${v.label}</span>
+          </button>`).join('')}
+      </div>
+      <div class="hint" style="margin-top:8px;font-size:12px">${STORY_TYPE_INFO[S.storyType].desc}</div>
+    </div>` : ''}
+    <div class="mode-toggle">
       <button class="mode-btn${S.mode==='inspire'?' active':''}" onclick="switchMode('inspire')">✨ Inspire Me</button>
       <button class="mode-btn${S.mode==='braindump'?' active':''}" onclick="switchMode('braindump')">🧠 Brain Dump</button>
     </div>
@@ -890,9 +985,9 @@ function renderStory() {
         <span class="slider-val" id="len-val">${S.length}</span>
       </div>
       <div class="slider-row">
-        <span style="font-size:11px;color:var(--muted)">4</span>
-        <input type="range" min="4" max="10" value="${S.length}" oninput="S.length=+this.value;document.getElementById('len-val').textContent=this.value;updateLegend()"/>
-        <span style="font-size:11px;color:var(--muted)">10</span>
+        <span style="font-size:11px;color:var(--muted)">${sliderRange()[0]}</span>
+        <input type="range" min="${sliderRange()[0]}" max="${sliderRange()[1]}" value="${S.length}" oninput="S.length=+this.value;document.getElementById('len-val').textContent=this.value;updateLegend()"/>
+        <span style="font-size:11px;color:var(--muted)">${sliderRange()[1]}</span>
       </div>
       <div id="legend" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">${legend}</div>
     </div>
@@ -905,8 +1000,21 @@ function renderStory() {
 function switchMode(m) {
   S.mode=m; S.inspireStep=1; render();
 }
+function sliderRange() {
+  return S.format==='story' ? STORY_RANGES[S.storyType] : [4,10];
+}
+function clampLength() {
+  const [lo,hi] = sliderRange();
+  S.length = Math.max(lo, Math.min(hi, S.length));
+}
+function switchFormat(f) {
+  S.format=f; S.inspireStep=1; clampLength(); render();
+}
+function switchStoryType(t) {
+  S.storyType=t; clampLength(); render();
+}
 function updateLegend() {
-  const plan = SLIDE_PLANS[S.length]||SLIDE_PLANS[7];
+  const plan = currentPlan();
   const legend = [...new Set(plan)].map(t=>{
     const m = TYPE_META[t];
     return `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--muted)">
@@ -931,7 +1039,7 @@ async function getIdeas() {
     const researchContext = S.researchData?.inject || '';
     const res = await apiFetch('/api/inspire', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({topic, niche: getNicheLabel(), researchContext})
+      body: JSON.stringify({topic, niche: getNicheLabel(), researchContext, format: S.format, storyType: S.storyType})
     });
     if(!res.ok) throw new Error('Request failed');
     const {ideas} = await res.json();
@@ -976,7 +1084,7 @@ async function startGenerate(mode) {
     const voiceStyle = (S.useVoice && S.voiceProfile?.prompt_injection) ? S.voiceProfile.prompt_injection : '';
     const res = await apiFetch('/api/generate', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({mode, input, length: S.length, niche: getNicheLabel(), voiceStyle})
+      body: JSON.stringify({mode, input, length: S.length, niche: getNicheLabel(), voiceStyle, format: S.format, storyType: S.storyType})
     });
     const reader = res.body.getReader();
     const dec = new TextDecoder();
@@ -1018,57 +1126,109 @@ async function startGenerate(mode) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// STEP 3: IMAGE UPLOAD
+// STEP 3: MEDIA LIBRARY (multi-photo upload)
 // ═══════════════════════════════════════════════════════════════
 function renderImage() {
+  const n = S.slides.length || S.length || 0;
+  const have = S.mediaLibrary.length;
+  const tiles = S.mediaLibrary.map((m, i) => `
+    <div class="media-tile">
+      <span class="media-tile-idx">${i+1}</span>
+      <button class="media-tile-del" onclick="removeMedia(${i})" title="Remove">×</button>
+      ${m.isVideo
+        ? `<video src="${m.dataURL}" muted loop autoplay playsinline></video>`
+        : `<img src="${m.dataURL}" alt="background ${i+1}"/>`}
+    </div>
+  `).join('');
   return `
     <button class="back-btn" onclick="S.step=2;render()">← Story</button>
-    <div class="section-title">Add Your Background</div>
-    <div class="section-sub">Upload the photo or video you want your story overlaid on.</div>
-    ${S.bgDataURL ? `
-      <div class="upload-preview">
-        ${S.bgIsVideo
-          ? `<video src="${S.bgDataURL}" muted loop autoplay playsinline></video>`
-          : `<img src="${S.bgDataURL}" alt="background"/>`}
-        <button class="upload-change" onclick="clearBg()">Change</button>
-      </div>
-      <button class="btn btn-primary" onclick="S.step=4;render()">Continue to Design →</button>
-    ` : `
-      <div class="upload-zone" id="upload-zone" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
-        <input type="file" accept="image/*,video/*" onchange="handleFile(this.files[0])"/>
-        <div class="upload-icon">📸</div>
-        <div class="upload-title">Drop your photo or video here</div>
-        <div class="upload-sub">JPEG, PNG, MP4, MOV — up to 50MB</div>
-      </div>
-      <div style="height:12px"></div>
-      <button class="btn btn-ghost" onclick="skipImage()">Skip — use solid background</button>
-    `}`;
+    <div class="section-title">Add Your Backgrounds</div>
+    <div class="section-sub">Upload up to ${n} photos or videos — one per slide. They'll auto-assign to slides in order; you can re-pick per slide on the next step.</div>
+    <div class="media-count-line">${have} of ${n} uploaded</div>
+    ${have ? `<div class="media-grid">${tiles}</div>` : ''}
+    <div class="upload-zone" id="upload-zone" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+      <input type="file" accept="image/*,video/*" multiple onchange="handleFiles(this.files)"/>
+      <div class="upload-icon">📸</div>
+      <div class="upload-title">${have ? 'Add more' : 'Drop photos or videos'}</div>
+      <div class="upload-sub">JPEG, PNG, MP4, MOV — pick multiple at once</div>
+    </div>
+    <div style="height:14px"></div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-ghost" onclick="skipImage()" style="flex:1">Skip — no backgrounds</button>
+      <button class="btn btn-primary" ${have ? '' : 'disabled'} onclick="S.step=4;render()" style="flex:1">Continue to Design →</button>
+    </div>
+  `;
 }
 function onDragOver(e){e.preventDefault();document.getElementById('upload-zone')?.classList.add('drag-over');}
 function onDragLeave(e){document.getElementById('upload-zone')?.classList.remove('drag-over');}
-function onDrop(e){e.preventDefault();const f=e.dataTransfer?.files?.[0];if(f)handleFile(f);}
-function handleFile(file) {
-  if(!file) return;
-  const reader=new FileReader();
-  reader.onload=(ev)=>{
-    S.bgDataURL=ev.target.result;
-    S.bgIsVideo=file.type.startsWith('video/');
-    if(S.bgIsVideo){
-      const v=document.createElement('video');
-      v.src=S.bgDataURL; v.crossOrigin='anonymous';
-      v.addEventListener('loadeddata',()=>{S.bgEl=v;});
-      v.load();
-    } else {
-      const img=new Image();
-      img.onload=()=>{S.bgEl=img;};
-      img.src=S.bgDataURL;
-    }
-    render();
+function onDrop(e){e.preventDefault();const fs=e.dataTransfer?.files;if(fs&&fs.length)handleFiles(fs);}
+function handleFiles(files) {
+  if(!files || !files.length) return;
+  const arr = Array.from(files);
+  let pending = arr.length;
+  const onOneDone = () => {
+    pending--;
+    if(pending === 0) { _autoAssignMedia(); render(); }
   };
-  reader.readAsDataURL(file);
+  arr.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataURL = ev.target.result;
+      const isVideo = file.type.startsWith('video/');
+      const entry = { dataURL, isVideo, el: null };
+      S.mediaLibrary.push(entry);
+      if(isVideo) {
+        const v = document.createElement('video');
+        v.src = dataURL; v.crossOrigin = 'anonymous'; v.muted = true; v.loop = true;
+        v.addEventListener('loadeddata', () => { entry.el = v; renderCanvas(); });
+        v.load();
+      } else {
+        const img = new Image();
+        img.onload = () => { entry.el = img; renderCanvas(); };
+        img.src = dataURL;
+      }
+      onOneDone();
+    };
+    reader.onerror = onOneDone;
+    reader.readAsDataURL(file);
+  });
 }
-function clearBg(){S.bgDataURL=null;S.bgEl=null;render();}
-function skipImage(){S.bgDataURL=null;S.bgEl=null;S.step=4;render();}
+function _autoAssignMedia() {
+  // Assign unset slides to next-available media indices, preserving manual choices.
+  const used = new Set();
+  for(const c of S.customizations) {
+    if(c && c.mediaIndex != null) used.add(c.mediaIndex);
+  }
+  let nextIdx = 0;
+  for(let i = 0; i < S.customizations.length; i++) {
+    if(S.customizations[i].mediaIndex != null) continue;
+    while(used.has(nextIdx) && nextIdx < S.mediaLibrary.length) nextIdx++;
+    if(nextIdx >= S.mediaLibrary.length) break;
+    S.customizations[i].mediaIndex = nextIdx;
+    used.add(nextIdx);
+    nextIdx++;
+  }
+}
+function removeMedia(idx) {
+  if(idx < 0 || idx >= S.mediaLibrary.length) return;
+  S.mediaLibrary.splice(idx, 1);
+  // Repair customizations referencing this index
+  for(const c of S.customizations) {
+    if(c.mediaIndex === idx) c.mediaIndex = null;
+    else if(c.mediaIndex != null && c.mediaIndex > idx) c.mediaIndex -= 1;
+  }
+  render();
+}
+function setSlideMedia(slideIdx, mediaIdx) {
+  if(!S.customizations[slideIdx]) return;
+  S.customizations[slideIdx].mediaIndex = (mediaIdx === null || mediaIdx === undefined) ? null : mediaIdx;
+  render();
+}
+function triggerBgUpload() {
+  const input = document.getElementById('design-add-media');
+  if(input) input.click();
+}
+function skipImage(){ S.step=4; render(); }
 
 // ═══════════════════════════════════════════════════════════════
 // STEP 4: DESIGN STUDIO
@@ -1153,6 +1313,25 @@ function renderDesign() {
 
       <!-- RIGHT: Control panel -->
       <div class="custom-panel">
+
+        <!-- BACKGROUND PICKER -->
+        <details class="panel-section" open>
+          <summary>Background</summary>
+          <div class="panel-section-body">
+            <div class="ctrl-label" style="margin-bottom:6px">Tap to switch background for this slide</div>
+            <div class="bg-strip" id="bg-strip">
+              <div class="bg-thumb bg-thumb-none${custom.mediaIndex==null?' selected':''}" onclick="setSlideMedia(${S.activeSlide},null)">None</div>
+              ${S.mediaLibrary.map((m,i)=>`
+                <div class="bg-thumb${custom.mediaIndex===i?' selected':''}" onclick="setSlideMedia(${S.activeSlide},${i})" title="Media ${i+1}">
+                  ${m.isVideo
+                    ? `<video src="${m.dataURL}" muted loop autoplay playsinline></video>`
+                    : `<img src="${m.dataURL}" alt="bg ${i+1}"/>`}
+                </div>`).join('')}
+              <button class="bg-strip-add" onclick="triggerBgUpload()" title="Upload more">+</button>
+            </div>
+            <input type="file" id="design-add-media" accept="image/*,video/*" multiple style="display:none" onchange="handleFiles(this.files);this.value=''"/>
+          </div>
+        </details>
 
         <!-- PRESETS -->
         <details class="panel-section" open>
@@ -1267,6 +1446,44 @@ function renderDesign() {
                 <input type="range" min="100" max="200" value="${Math.round(custom.lineHeight*100)}"
                   oninput="updateSlider('lineHeight',this.value/100);document.getElementById('lh-v').textContent=(this.value/100).toFixed(1)+'×'"/>
                 <span class="range-val" id="lh-v">${custom.lineHeight.toFixed(1)}×</span>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <!-- DIVIDER LINE -->
+        <details class="panel-section">
+          <summary>Divider Line</summary>
+          <div class="panel-section-body">
+            <div>
+              <div class="ctrl-label" style="margin-bottom:5px">Color</div>
+              <div class="color-row">
+                <input type="color" value="${custom.dividerColor||'#FF6B00'}" oninput="updateColor('dividerColor',this.value);document.getElementById('dc-hex').textContent=this.value"/>
+                <span class="color-hex" id="dc-hex">${custom.dividerColor||'#FF6B00'}</span>
+              </div>
+            </div>
+            <div class="ctrl-row">
+              <span class="ctrl-label">Width</span>
+              <div class="range-wrap">
+                <input type="range" min="0" max="400" value="${custom.dividerWidth??70}"
+                  oninput="updateSlider('dividerWidth',+this.value);document.getElementById('dw-v').textContent=this.value+'px'"/>
+                <span class="range-val" id="dw-v">${custom.dividerWidth??70}px</span>
+              </div>
+            </div>
+            <div class="ctrl-row">
+              <span class="ctrl-label">Thickness</span>
+              <div class="range-wrap">
+                <input type="range" min="0" max="20" value="${custom.dividerThickness??3}"
+                  oninput="updateSlider('dividerThickness',+this.value);document.getElementById('dt-v').textContent=this.value+'px'"/>
+                <span class="range-val" id="dt-v">${custom.dividerThickness??3}px</span>
+              </div>
+            </div>
+            <div class="ctrl-row">
+              <span class="ctrl-label">Position</span>
+              <div class="range-wrap">
+                <input type="range" min="0" max="100" value="${Math.round((custom.dividerOffsetX??0)*100)}"
+                  oninput="updateSlider('dividerOffsetX',this.value/100);document.getElementById('do-v').textContent=this.value+'%'"/>
+                <span class="range-val" id="do-v">${Math.round((custom.dividerOffsetX??0)*100)}%</span>
               </div>
             </div>
           </div>
@@ -1505,19 +1722,23 @@ function updateColor(key, val) {
   S.customizations[S.activeSlide][key]=val; renderCanvas();
 }
 
-// Word highlight — new persistent-panel model
-function hlWord(clean) {
+// Word highlight — per-instance model.
+// Key format: "h:0" = first word of headline, "b:3" = 4th word of body.
+function hlWord(key) {
   const wf = S.customizations[S.activeSlide].wordFormats;
-  const existing = wf[clean];
+  const existing = wf[key];
   // Remove if already has same colour AND same caps state; otherwise apply/update
   if(existing && existing.color===S.hlColor && !!existing.caps===S.hlCaps) {
-    delete wf[clean];
+    delete wf[key];
   } else {
-    wf[clean] = {color: S.hlColor, weight: 700, caps: S.hlCaps};
+    wf[key] = {color: S.hlColor, weight: 700, caps: S.hlCaps};
   }
   // Re-render only the word zone + canvas, not the whole panel
   _refreshWordZone();
   renderCanvas();
+}
+function _splitWords(text) {
+  return (text||'').split(/\s+/).filter(Boolean);
 }
 function setHlColor(color) {
   S.hlColor = color;
@@ -1547,17 +1768,21 @@ function _refreshWordZone() {
 }
 function _buildWordZoneHtml() {
   const custom = S.customizations[S.activeSlide];
-  const rawWords = ((custom.headline||'')+' '+(custom.body||'')).split(/\s+/).filter(Boolean);
-  const seen = new Set();
-  return rawWords.map(w=>{
-    const clean = w.replace(/[^a-zA-Z0-9']/g,'').toLowerCase();
-    if(!clean||seen.has(clean)) return '';
-    seen.add(clean);
-    const fmt = custom.wordFormats[clean];
-    const style = fmt ? `color:${fmt.color};font-weight:${fmt.weight||700};${fmt.caps?'text-transform:uppercase;letter-spacing:.05em;':''}` : '';
-    const display = fmt?.caps ? w.toUpperCase() : esc(w);
-    return `<span class="hltoken${fmt?' is-hl':''}" style="${style}" onclick="hlWord('${escAttr(clean)}')">${display}</span> `;
-  }).join('');
+  const blocks = [
+    {prefix: 'h', words: _splitWords(custom.headline), label: 'Headline'},
+    {prefix: 'b', words: _splitWords(custom.body),     label: 'Body'},
+  ];
+  return blocks.map(block => {
+    if(!block.words.length) return '';
+    const tokens = block.words.map((w, i) => {
+      const key = `${block.prefix}:${i}`;
+      const fmt = custom.wordFormats[key];
+      const style = fmt ? `color:${fmt.color};font-weight:${fmt.weight||700};${fmt.caps?'text-transform:uppercase;letter-spacing:.05em;':''}` : '';
+      const display = fmt?.caps ? w.toUpperCase() : esc(w);
+      return `<span class="hltoken${fmt?' is-hl':''}" onclick="hlWord('${key}')" style="${style}">${display}</span> `;
+    }).join('');
+    return `<div class="hl-block-label">${block.label}</div><div class="hl-block-words">${tokens}</div>`;
+  }).filter(Boolean).join('');
 }
 async function autoHighlight() {
   const btn = document.getElementById('btn-auto-hl');
@@ -1571,10 +1796,12 @@ async function autoHighlight() {
     });
     const {words} = await res.json();
     if(Array.isArray(words)) {
-      words.forEach(w=>{
-        const clean = w.replace(/[^a-zA-Z0-9']/g,'').toLowerCase();
-        if(clean) custom.wordFormats[clean]={color:S.hlColor, weight:700, caps:S.hlCaps};
-      });
+      const headWords = _splitWords(custom.headline);
+      const bodyWords = _splitWords(custom.body);
+      const cleanOf = s => s.replace(/[^a-zA-Z0-9']/g,'').toLowerCase();
+      const targetCleans = new Set(words.map(cleanOf).filter(Boolean));
+      headWords.forEach((w,i)=>{ if(targetCleans.has(cleanOf(w))) custom.wordFormats[`h:${i}`]={color:S.hlColor, weight:700, caps:S.hlCaps}; });
+      bodyWords.forEach((w,i)=>{ if(targetCleans.has(cleanOf(w))) custom.wordFormats[`b:${i}`]={color:S.hlColor, weight:700, caps:S.hlCaps}; });
     }
     _refreshWordZone();
     renderCanvas();
@@ -1966,14 +2193,15 @@ async function renderCanvas(forExport=false, slideIdx=null) {
   ctx.fillStyle='#111111';
   ctx.fillRect(0,0,W,H);
 
-  // 2. Background image/video (cover-fit)
-  if(S.bgEl) {
+  // 2. Background image/video (cover-fit) — pulled from media library
+  const media = (custom.mediaIndex != null) ? S.mediaLibrary[custom.mediaIndex] : null;
+  if(media && media.el) {
     try {
-      const iW=S.bgIsVideo?S.bgEl.videoWidth:S.bgEl.naturalWidth;
-      const iH=S.bgIsVideo?S.bgEl.videoHeight:S.bgEl.naturalHeight;
+      const iW=media.isVideo?media.el.videoWidth:media.el.naturalWidth;
+      const iH=media.isVideo?media.el.videoHeight:media.el.naturalHeight;
       if(iW>0&&iH>0){
         const sc=Math.max(W/iW,H/iH);
-        ctx.drawImage(S.bgEl,(W-iW*sc)/2,(H-iH*sc)/2,iW*sc,iH*sc);
+        ctx.drawImage(media.el,(W-iW*sc)/2,(H-iH*sc)/2,iW*sc,iH*sc);
       }
     } catch(e){}
   }
@@ -1999,10 +2227,8 @@ async function renderCanvas(forExport=false, slideIdx=null) {
   const maxW=W-padX*2;
   const shadow=custom.textShadow!==false;
 
-  ctx.font=`${custom.headlineWeight} ${headSize}px ${fontFam}`;
-  const headLines=wrapText(ctx,custom.headline||'',maxW);
-  ctx.font=`${custom.bodyWeight} ${bodySize}px ${fontFam}`;
-  const bodyLines=wrapText(ctx,custom.body||'',maxW);
+  const headLines=wrapText(ctx,custom.headline||'',maxW,custom.wordFormats,'h',custom.headlineWeight||800,headSize,fontFam);
+  const bodyLines=wrapText(ctx,custom.body||'',maxW,custom.wordFormats,'b',custom.bodyWeight||400,bodySize,fontFam);
 
   const sepH=Math.round(30*SF);
   const totalH=headLines.length*lineH+sepH+bodyLines.length*bodyLineH;
@@ -2029,35 +2255,42 @@ async function renderCanvas(forExport=false, slideIdx=null) {
   // 5. Headline
   let curY=drawTextLines(ctx,headLines,custom.wordFormats,startY,textPadX,textMaxW,W,
     custom.headlineColor||'#F5F0E8',custom.headlineWeight||800,
-    headSize,fontFam,lineH,custom.headlineAlign||'left',shadow);
+    headSize,fontFam,lineH,custom.headlineAlign||'left',shadow,'h');
 
   // 6. Separator bar
-  ctx.fillStyle='#FF6B00';
-  ctx.fillRect(textPadX,curY+Math.round(8*SF),Math.round(70*SF),Math.round(3*SF));
+  const dCol=custom.dividerColor||'#FF6B00';
+  const dW=Math.round((custom.dividerWidth??70)*SF);
+  const dT=Math.round((custom.dividerThickness??3)*SF);
+  const dOff=Math.max(0,Math.min(1,custom.dividerOffsetX??0));
+  const dX=textPadX+Math.max(0,textMaxW-dW)*dOff;
+  const dY=curY+(sepH-dT)/2;
+  ctx.fillStyle=dCol;
+  ctx.fillRect(dX,dY,dW,dT);
   curY+=sepH;
 
   // 7. Body
   drawTextLines(ctx,bodyLines,custom.wordFormats,curY,textPadX,textMaxW,W,
     custom.bodyColor||'#C8C0B0',custom.bodyWeight||400,
-    bodySize,fontFam,bodyLineH,custom.bodyAlign||'left',shadow);
+    bodySize,fontFam,bodyLineH,custom.bodyAlign||'left',shadow,'b');
 
   // No type label. No branding footer.
   return canvas;
 }
 
-// Render lines of text with per-word colour/weight overrides
-function drawTextLines(ctx,lines,wordFormats,startY,padX,maxW,W,defaultColor,defaultWeight,fontSize,fontFam,lineH,align,shadow) {
+// Render lines of text with per-word colour/weight overrides.
+// keyPrefix is 'h' for headline or 'b' for body — used to look up per-position wordFormats.
+function drawTextLines(ctx,lines,wordFormats,startY,padX,maxW,W,defaultColor,defaultWeight,fontSize,fontFam,lineH,align,shadow,keyPrefix) {
   let curY=startY;
   if(shadow){ctx.shadowColor='rgba(0,0,0,0.85)';ctx.shadowBlur=14;ctx.shadowOffsetX=1;ctx.shadowOffsetY=2;}
+  let lineStartWord=0;
   for(const line of lines){
-    const words=line.split(' ');
+    const words=line.split(/\s+/).filter(Boolean);
     let startX=padX;
     if(align!=='left'){
       // Accurate per-word measurement accounting for individual weights and caps
       let lw=0;
       for(let wi=0;wi<words.length;wi++){
-        const wclean=words[wi].replace(/[^a-zA-Z0-9']/g,'').toLowerCase();
-        const wfmt=wordFormats?.[wclean]||{};
+        const wfmt=wordFormats?.[`${keyPrefix}:${lineStartWord+wi}`]||{};
         const wdrawn=wfmt.caps?words[wi].toUpperCase():words[wi];
         ctx.font=`${wfmt.weight||defaultWeight} ${fontSize}px ${fontFam}`;
         lw+=ctx.measureText(wdrawn).width;
@@ -2068,8 +2301,7 @@ function drawTextLines(ctx,lines,wordFormats,startY,padX,maxW,W,defaultColor,def
     let curX=startX;
     for(let wi=0;wi<words.length;wi++){
       const word=words[wi];
-      const clean=word.replace(/[^a-zA-Z0-9']/g,'').toLowerCase();
-      const fmt=wordFormats?.[clean]||{};
+      const fmt=wordFormats?.[`${keyPrefix}:${lineStartWord+wi}`]||{};
       const weight=fmt.weight||defaultWeight;
       const color=fmt.color||defaultColor;
       const drawn=fmt.caps ? word.toUpperCase() : word;
@@ -2080,21 +2312,40 @@ function drawTextLines(ctx,lines,wordFormats,startY,padX,maxW,W,defaultColor,def
       if(wi<words.length-1){ctx.font=`${defaultWeight} ${fontSize}px ${fontFam}`;curX+=wordW+ctx.measureText(' ').width;}
       else curX+=wordW;
     }
+    lineStartWord+=words.length;
     curY+=lineH;
   }
   ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
   return curY;
 }
 
-function wrapText(ctx,text,maxWidth){
-  const words=(text||'').split(' ');
-  const lines=[];let line='';
-  for(const word of words){
-    const test=line?line+' '+word:word;
-    if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=word;}
-    else line=test;
+// Wrap text into lines, measuring each word with its actual drawn format
+// (caps + per-word weight from wordFormats). Without this, capitalised words
+// overflow the line because the wrap was computed using lowercase widths.
+function wrapText(ctx,text,maxWidth,wordFormats,keyPrefix,defaultWeight,fontSize,fontFam){
+  const words=(text||'').split(/\s+/).filter(Boolean);
+  if(!words.length) return [];
+  ctx.font=`${defaultWeight} ${fontSize}px ${fontFam}`;
+  const spaceW=ctx.measureText(' ').width;
+  const lines=[];
+  let curLine=[]; let curW=0;
+  for(let i=0;i<words.length;i++){
+    const w=words[i];
+    const fmt=wordFormats?.[`${keyPrefix}:${i}`]||{};
+    const weight=fmt.weight||defaultWeight;
+    const drawn=fmt.caps?w.toUpperCase():w;
+    ctx.font=`${weight} ${fontSize}px ${fontFam}`;
+    const wordW=ctx.measureText(drawn).width;
+    const addedW=curLine.length?spaceW+wordW:wordW;
+    if(curLine.length && curW+addedW>maxWidth){
+      lines.push(curLine.join(' '));
+      curLine=[w]; curW=wordW;
+    } else {
+      curLine.push(w); curW+=addedW;
+    }
   }
-  if(line)lines.push(line);
+  if(curLine.length) lines.push(curLine.join(' '));
+  ctx.font=`${defaultWeight} ${fontSize}px ${fontFam}`;
   return lines;
 }
 

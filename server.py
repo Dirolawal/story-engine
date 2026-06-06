@@ -96,8 +96,119 @@ def get_slide_plan(length):
     return SLIDE_PLANS.get(max(4, min(10, int(length))), SLIDE_PLANS[7])
 
 
-def build_system_message(client_context, niche):
+# ─── Instagram STORY SEQUENCE plans ─────────────────────────────
+# Three sequence types (70/20/10 distribution philosophy):
+#   conversion = the launch / cash-in sequence (7 principles)
+#   nurture    = deep story, ZERO selling, builds goodwill
+#   authority  = recap dump, pillar rotation, never 2 same adjacent
+STORY_PLANS = {
+    'conversion': {
+        6:  ['hook', 'story', 'antisell', 'icp', 'proof', 'cta'],
+        7:  ['hook', 'story', 'story', 'antisell', 'icp', 'proof', 'cta'],
+        8:  ['hook', 'story', 'story', 'authority', 'antisell', 'icp', 'proof', 'cta'],
+        9:  ['hook', 'story', 'story', 'authority', 'antisell', 'icp', 'scarcity', 'proof', 'cta'],
+        10: ['hook', 'story', 'story', 'story', 'authority', 'antisell', 'icp', 'scarcity', 'proof', 'cta'],
+        11: ['hook', 'story', 'story', 'story', 'authority', 'antisell', 'icp', 'scarcity', 'proof', 'proof', 'cta'],
+        12: ['hook', 'story', 'story', 'story', 'story', 'authority', 'antisell', 'icp', 'scarcity', 'proof', 'proof', 'cta'],
+    },
+    'nurture': {
+        4:  ['hook', 'story', 'lesson', 'reflection'],
+        5:  ['hook', 'story', 'story', 'lesson', 'reflection'],
+        6:  ['hook', 'story', 'story', 'lesson', 'lesson', 'reflection'],
+        7:  ['hook', 'story', 'story', 'story', 'lesson', 'lesson', 'reflection'],
+        8:  ['hook', 'story', 'story', 'story', 'lesson', 'lesson', 'lesson', 'reflection'],
+    },
+    'authority': {
+        6:  ['hook', 'entertain', 'proof', 'wholesome', 'authority', 'ender'],
+        7:  ['hook', 'entertain', 'proof', 'wholesome', 'authority', 'signature', 'ender'],
+        8:  ['hook', 'entertain', 'proof', 'wholesome', 'authority', 'signature', 'proof', 'ender'],
+        9:  ['hook', 'entertain', 'proof', 'wholesome', 'authority', 'signature', 'proof', 'wholesome', 'ender'],
+        10: ['hook', 'entertain', 'proof', 'wholesome', 'authority', 'signature', 'proof', 'wholesome', 'authority', 'ender'],
+        11: ['hook', 'entertain', 'proof', 'wholesome', 'authority', 'signature', 'proof', 'wholesome', 'authority', 'entertain', 'ender'],
+        12: ['hook', 'entertain', 'proof', 'wholesome', 'authority', 'signature', 'proof', 'wholesome', 'authority', 'entertain', 'proof', 'ender'],
+    },
+}
+
+STORY_RANGES = {'conversion': (6, 12), 'nurture': (4, 8), 'authority': (6, 12)}
+
+
+def get_story_plan(story_type, length):
+    story_type = story_type if story_type in STORY_PLANS else 'conversion'
+    lo, hi = STORY_RANGES[story_type]
+    length = max(lo, min(hi, int(length)))
+    return story_type, STORY_PLANS[story_type][length]
+
+
+STORY_TYPE_DEFS = (
+    'Slide types: hook=written + visual hook (face on slide, a number, or a pattern interrupt; '
+    'open with intrigue or something the audience badly wants, ideally both); '
+    'story=a storytelling beat that builds anticipation and ends on an open loop; '
+    'authority=a social proof moment woven into the narrative (speaking, client moment, mastermind); '
+    'antisell=a pattern break that tells part of the audience this is NOT for them; '
+    'icp=finally call out the ideal customer plus 3-4 pain point bullets in their literal internal language; '
+    'scarcity=real urgency only (true spot counts, real deadlines, mention that each close gets tagged publicly); '
+    'proof=credibility receipts (real names, real numbers, years, dream outcome); '
+    'cta=one clear action with a single trigger word reply; '
+    'lesson=the insight or philosophy the story earns; '
+    'reflection=a soft closing thought or open question, never an ask; '
+    'entertain=something genuinely funny or surprising; '
+    'wholesome=comfort content (pets, family, friends, unpolished moments); '
+    'signature=a recurring personal brand quirk the audience recognises; '
+    'ender=a "if you made it this far, you are a real one" style closer.'
+)
+
+STORY_COPY_RULES = (
+    'STORY SEQUENCE COPY RULES (non-negotiable):\n'
+    '1. CLOSE THE LOOP AS LATE AS POSSIBLE. The reader must not know where the sequence is going '
+    'from slide 1. Never reveal the offer or the topic early. Build each point fully BEFORE naming it.\n'
+    '2. NEVER call out the ICP at the start. The ICP callout comes late, after the story has earned it.\n'
+    '3. RE-HOOK: end almost every slide on an unresolved line so the next tap is compulsory. '
+    'Do not close a slide neatly.\n'
+    '4. LEGIBILITY: max 3 visual lines per paragraph (roughly 18 words). Body = 1-3 short paragraphs '
+    'separated by blank lines. Long blocks never get read.\n'
+    '5. AUTHENTICITY: a conversion sequence must contain one polarizing statement that 5-20% of readers '
+    'would actively disagree with. If nobody could disagree, it is too soft. Rewrite it.\n'
+    '6. SCARCITY IS REAL: never invent spot counts or deadlines. Pull only real ones from the input '
+    'or the client context.\n'
+    '7. CTA slide: readable in 3 seconds, max 20 words, ONE action (reply with a trigger word), '
+    'personal and low friction. Direction note: wholesome photo, never a flex shot, highlight 2-4 key words.\n'
+    '8. CONTRAST LAW: authority without relatability reads as a scam, relatability without authority '
+    'reads as begging. Lead with the win, then the honest cost of it.\n'
+    '9. NURTURE sequences sell NOTHING. No CTA, no lead magnet, no ask. The reflection slide is a '
+    'thought or question, full stop.\n'
+    '10. AUTHORITY DUMP sequences never put two of the same pillar back to back, and the body text is '
+    'what turns a flex into a story: one short caption line per slide telling the mini-narrative.'
+)
+
+
+def build_system_message(client_context, niche, fmt='carousel', story_type='conversion'):
     """Build the system message with prompt caching on the client context block."""
+    if fmt == 'story':
+        base_role = (
+            f'You are an expert Instagram STORY SEQUENCE scriptwriter for a {niche}. '
+            f'A story sequence is a series of full-screen 9:16 Instagram story frames consumed one tap '
+            f'at a time. The viewer can skip at any moment, so every slide must buy the next tap. '
+            f'This sequence is a {story_type.upper()} sequence. '
+            f'{STORY_TYPE_DEFS} '
+            f'Rules: headline max 8 words punchy; body follows the legibility rule below; '
+            f'direction=1 brief visual note for the designer (photo choice, face placement, white space, '
+            f'where to leave empty space for text).\n\n'
+            f'{STORY_COPY_RULES}'
+            f'\n\nNON-NEGOTIABLE: the client context above defines HARD BANS, ICP filters, voice rules, '
+            f'and (when present) a hook scoring framework. Apply all of them verbatim. '
+            f'If the client bans em-dashes, verify every headline, body, and direction is em-dash free '
+            f'before returning. Pull receipts from the client credibility vault and story bible. '
+            f'Do not invent facts, numbers, or scarcity.'
+        )
+        blocks = []
+        if client_context:
+            blocks.append({
+                'type': 'text',
+                'text': client_context,
+                'cache_control': {'type': 'ephemeral'},
+            })
+        blocks.append({'type': 'text', 'text': base_role})
+        return blocks
     base_role = (
         f'You are an expert Instagram carousel scriptwriter for a {niche}. '
         f'Write punchy, scroll-stopping, emotionally resonant copy. '
@@ -175,6 +286,8 @@ def inspire():
     data = request.get_json() or {}
     topic = data.get('topic', '').strip()
     niche = data.get('niche', 'Content Creator').strip()
+    fmt = data.get('format', 'carousel')
+    story_type = data.get('storyType', 'conversion')
     if not topic:
         return jsonify({'error': 'Topic is required'}), 400
     research_context = data.get('researchContext', '').strip()
@@ -183,10 +296,15 @@ def inspire():
     if research_context:
         research_inject = f'\n\nCURRENT TREND INSIGHTS (use these to inform angles):\n{research_context}\n'
 
-    system_blocks = build_system_message(request.client_context, niche)
+    system_blocks = build_system_message(request.client_context, niche, fmt, story_type)
+
+    if fmt == 'story':
+        fmt_clause = f'Instagram {story_type} story sequence angles'
+    else:
+        fmt_clause = 'Instagram carousel angles'
 
     user_prompt = (
-        f'Generate 6 distinct Instagram carousel angles for a {niche} about: "{topic}"\n'
+        f'Generate 6 distinct {fmt_clause} for a {niche} about: "{topic}"\n'
         f'Each angle takes a different perspective (personal story, industry myth, hot take, '
         f'behind-the-scenes, framework, case study). '
         f'Honour the client context above — voice, ICP, beliefs, vocabulary.'
@@ -222,14 +340,24 @@ def generate():
     length = data.get('length', 7)
     niche = data.get('niche', 'Content Creator').strip()
     voice_style = data.get('voiceStyle', '').strip()
+    fmt = data.get('format', 'carousel')
+    story_type = data.get('storyType', 'conversion')
 
     if not input_text:
         return jsonify({'error': 'Input is required'}), 400
 
-    plan = get_slide_plan(length)
+    if fmt == 'story':
+        story_type, plan = get_story_plan(story_type, length)
+        length = len(plan)
+        fmt_label = f'{story_type} Instagram story sequence'
+        body_hint = '1-3 short paragraphs, max 3 visual lines each, blank line between'
+    else:
+        plan = get_slide_plan(length)
+        fmt_label = 'carousel'
+        body_hint = '2-3 sentences'
     types = ' → '.join(plan)
 
-    system_blocks = build_system_message(request.client_context, niche)
+    system_blocks = build_system_message(request.client_context, niche, fmt, story_type)
 
     voice_clause = (
         f'\n\nADDITIONAL VOICE OVERRIDE (use on top of client voice rules): {voice_style}'
@@ -238,20 +366,20 @@ def generate():
 
     if mode == 'braindump':
         user_prompt = (
-            f'Transform these raw thoughts into a polished {length}-slide carousel script, '
+            f'Transform these raw thoughts into a polished {length}-slide {fmt_label} script, '
             f'staying true to the client voice and using their ICP language:\n---\n{input_text}\n---\n\n'
             f'Use slide types in order: {types}\n{voice_clause}\n\n'
             f'Return ONLY valid JSON array, no markdown. {len(plan)} slides:\n'
-            f'[{{"type":"hook","headline":"max 8 words","body":"2-3 sentences","direction":"visual note"}}]'
+            f'[{{"type":"hook","headline":"max 8 words","body":"{body_hint}","direction":"visual note"}}]'
         )
     else:
         user_prompt = (
-            f'Create a {length}-slide carousel script about: "{input_text}"\n\n'
+            f'Create a {length}-slide {fmt_label} script about: "{input_text}"\n\n'
             f'Use slide types in order: {types}\n'
             f'Pull from the client credibility vault and ICP language above. '
             f'Use real numbers / real names from the context — do not invent any.{voice_clause}\n\n'
             f'Return ONLY valid JSON array, no markdown. {len(plan)} slides:\n'
-            f'[{{"type":"hook","headline":"max 8 words","body":"2-3 sentences","direction":"visual note"}}]'
+            f'[{{"type":"hook","headline":"max 8 words","body":"{body_hint}","direction":"visual note"}}]'
         )
 
     def stream():
