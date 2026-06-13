@@ -86,7 +86,33 @@ Then send each VA: the URL + the password for their client. They pick the client
 
 - **No admin UI to edit contexts** — you (Diro) edit the markdown files in this repo and re-deploy. Fine for now since you write them anyway.
 - **No per-VA login** — one password per client, shared with whoever they hand it to. If you need to rotate, change the Render env var, redeploy, hand out the new password.
-- **No usage analytics** — no idea who generated what or how often. Add later if Basit asks.
+- ~~**No usage analytics**~~ — DONE. See "Usage analytics" below.
+
+---
+
+## Usage analytics
+
+Every generation call now logs one structured line (client, endpoint, model, token
+usage, a short label) via `analytics.py`. This answers "who generated what, how often,
+and roughly what did it cost" — useful for retention ("your engine produced 47 posts
+this quarter") and for spotting which clients lean on the engine most.
+
+**See the numbers:**
+- Set `ADMIN_PASSWORD` as an env var on Render (admin-only, separate from client passwords).
+- Hit `GET /api/analytics?key=<ADMIN_PASSWORD>` (or pass header `X-Admin-Password`).
+- Optional filters: `?client_id=basit` for one client, `?since=2026-04-01T00:00:00Z` for a date window.
+- Returns per-client and overall totals: generation counts, breakdown by endpoint
+  (generate / inspire / translate / etc.), token totals, error counts, and an estimated cost.
+
+**Two things to know:**
+1. **Storage is a JSONL append file.** Default path is `data/analytics.jsonl` inside the repo's
+   working dir, which is **ephemeral on Render** — it resets on every redeploy. For durable history,
+   set `ANALYTICS_LOG_PATH` to a Render persistent disk mount, or swap the sink in `analytics.py`
+   to Supabase (you already have it connected).
+2. **Cost figures are estimates.** They use configurable per-million-token rates
+   (`ANALYTICS_INPUT_COST_PER_MTOK`, `ANALYTICS_OUTPUT_COST_PER_MTOK`, and the two cache rates),
+   defaulting to Opus-tier approximations. Set them to your real rates for accuracy. These are not
+   billed numbers — check the Anthropic console for actuals.
 
 ---
 

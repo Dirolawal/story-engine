@@ -6,6 +6,10 @@ from functools import wraps
 from flask import Flask, request, jsonify, send_from_directory, Response, stream_with_context
 import anthropic
 
+import analytics
+
+MODEL = 'claude-opus-4-8'
+
 try:
     from dotenv import load_dotenv
     load_dotenv()
@@ -148,6 +152,19 @@ def list_clients():
     })
 
 
+@app.route('/api/analytics', methods=['GET'])
+def analytics_endpoint():
+    """Admin-only usage dashboard data. Gated by the ADMIN_PASSWORD env var,
+    passed as the X-Admin-Password header or a ?key= query param."""
+    expected = os.environ.get('ADMIN_PASSWORD', '')
+    provided = request.headers.get('X-Admin-Password', '') or request.args.get('key', '')
+    if not expected or provided != expected:
+        return jsonify({'error': 'Unauthorized'}), 401
+    client_id = (request.args.get('client_id') or '').strip().lower() or None
+    since = request.args.get('since') or None
+    return jsonify(analytics.summarize(client_id=client_id, since=since))
+
+
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.get_json() or {}
@@ -198,7 +215,7 @@ def inspire():
 
     try:
         response = client.messages.create(
-            model='claude-opus-4-8',
+            model=MODEL,
             max_tokens=1000,
             system=system_blocks,
             messages=[{'role': 'user', 'content': user_prompt}],
@@ -207,9 +224,13 @@ def inspire():
         m = re.search(r'\[[\s\S]*\]', text)
         if not m:
             raise ValueError('Could not parse ideas')
+        analytics.log_event(request.client_id, 'inspire', model=MODEL, usage=response.usage,
+                            meta={'niche': niche, 'topic': topic[:80]})
         return jsonify({'ideas': json.loads(m.group(0))})
     except Exception as e:
         print(f'Inspire error: {e}')
+        analytics.log_event(request.client_id, 'inspire', model=MODEL, ok=False,
+                            meta={'error': str(e)[:120]})
         return jsonify({'error': str(e)}), 500
 
 
@@ -254,12 +275,16 @@ def generate():
             f'[{{"type":"hook","headline":"max 8 words","body":"2-3 sentences","direction":"visual note"}}]'
         )
 
+    cid = request.client_id
+    log_meta = {'mode': mode, 'length': length, 'input': input_text[:80]}
+
     def stream():
         full = ''
+        usage = None
         try:
             yield f"data: {json.dumps({'type': 'start', 'total': len(plan)})}\n\n"
             with client.messages.stream(
-                model='claude-opus-4-8',
+                model=MODEL,
                 max_tokens=1500,
                 system=system_blocks,
                 messages=[{'role': 'user', 'content': user_prompt}],
@@ -268,12 +293,18 @@ def generate():
                     if ev.type == 'content_block_delta' and ev.delta.type == 'text_delta':
                         full += ev.delta.text
                         yield f"data: {json.dumps({'type': 'chunk', 'text': ev.delta.text})}\n\n"
+                usage = s.get_final_message().usage
             m = re.search(r'\[[\s\S]*\]', full)
             if m:
+                analytics.log_event(cid, 'generate', model=MODEL, usage=usage, meta=log_meta)
                 yield f"data: {json.dumps({'type': 'complete', 'slides': json.loads(m.group(0))})}\n\n"
             else:
+                analytics.log_event(cid, 'generate', model=MODEL, usage=usage, ok=False,
+                                    meta={**log_meta, 'error': 'parse_failed'})
                 yield f"data: {json.dumps({'type': 'error', 'message': 'Parse failed — try again'})}\n\n"
         except Exception as e:
+            analytics.log_event(cid, 'generate', model=MODEL, ok=False,
+                                meta={**log_meta, 'error': str(e)[:120]})
             yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
         yield 'data: [DONE]\n\n'
 
@@ -294,7 +325,7 @@ def highlight():
         return jsonify({'error': 'Text is required'}), 400
     try:
         response = client.messages.create(
-            model='claude-opus-4-8',
+            model=MODEL,
             max_tokens=200,
             messages=[{
                 'role': 'user',
@@ -313,9 +344,12 @@ def highlight():
         if not m:
             raise ValueError('Could not parse word list')
         words = json.loads(m.group(0))
+        analytics.log_event(request.client_id, 'highlight', model=MODEL, usage=response.usage)
         return jsonify({'words': [str(w).lower() for w in words if w]})
     except Exception as e:
         print(f'Highlight error: {e}')
+        analytics.log_event(request.client_id, 'highlight', model=MODEL, ok=False,
+                            meta={'error': str(e)[:120]})
         return jsonify({'error': str(e)}), 500
 
 
@@ -330,7 +364,7 @@ def translate():
         return jsonify({'slides': slides})
     try:
         response = client.messages.create(
-            model='claude-opus-4-8',
+            model=MODEL,
             max_tokens=2000,
             system=build_system_message(request.client_context, niche),
             messages=[{
@@ -350,9 +384,13 @@ def translate():
         m = re.search(r'\[[\s\S]*\]', text)
         if not m:
             raise ValueError('Could not parse translation')
+        analytics.log_event(request.client_id, 'translate', model=MODEL, usage=response.usage,
+                            meta={'language': language})
         return jsonify({'slides': json.loads(m.group(0))})
     except Exception as e:
         print(f'Translate error: {e}')
+        analytics.log_event(request.client_id, 'translate', model=MODEL, ok=False,
+                            meta={'language': language, 'error': str(e)[:120]})
         return jsonify({'error': str(e)}), 500
 
 
@@ -365,7 +403,7 @@ def voice():
         return jsonify({'error': 'Text is required'}), 400
     try:
         response = client.messages.create(
-            model='claude-opus-4-8',
+            model=MODEL,
             max_tokens=600,
             messages=[{
                 'role': 'user',
@@ -386,9 +424,12 @@ def voice():
         m = re.search(r'\{[\s\S]*\}', raw)
         if not m:
             raise ValueError('Could not parse voice profile')
+        analytics.log_event(request.client_id, 'voice', model=MODEL, usage=response.usage)
         return jsonify({'profile': json.loads(m.group(0))})
     except Exception as e:
         print(f'Voice error: {e}')
+        analytics.log_event(request.client_id, 'voice', model=MODEL, ok=False,
+                            meta={'error': str(e)[:120]})
         return jsonify({'error': str(e)}), 500
 
 
@@ -401,7 +442,7 @@ def research():
     topic_clause = f' related to: {topic}' if topic else ''
     try:
         response = client.messages.create(
-            model='claude-opus-4-8',
+            model=MODEL,
             max_tokens=1200,
             tools=[{'type': 'web_search_20250305', 'name': 'web_search', 'max_uses': 3}],
             messages=[{
@@ -423,9 +464,13 @@ def research():
         m = re.search(r'\{[\s\S]*\}', text)
         if not m:
             raise ValueError('Could not parse research')
+        analytics.log_event(request.client_id, 'research', model=MODEL, usage=response.usage,
+                            meta={'niche': niche, 'topic': topic[:80]})
         return jsonify({'research': json.loads(m.group(0))})
     except Exception as e:
         print(f'Research error: {e}')
+        analytics.log_event(request.client_id, 'research', model=MODEL, ok=False,
+                            meta={'error': str(e)[:120]})
         return jsonify({'error': str(e)}), 500
 
 
