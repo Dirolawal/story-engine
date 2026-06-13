@@ -78,7 +78,7 @@ Then send each VA: the URL + the password for their client. They pick the client
 ## Two things to know
 
 1. **Engine contexts are committed to the repo.** That's fine — they're not secrets, they're guidelines. But if you ever put credentials in them, that'll be in git history. Don't.
-2. **Sonnet 4 hits end-of-life on June 15, 2026.** The model `claude-sonnet-4-20250514` is in `server.py` 5 times. Before mid-June, bulk-replace it with `claude-sonnet-4-6` or `claude-sonnet-4-7`. Newer model = better output, slightly more expensive. Test one generation per client before flipping for real.
+2. **Model: `claude-opus-4-8` (upgraded June 2026).** Sonnet 4 (`claude-sonnet-4-20250514`) hit end-of-life on June 15, 2026, so `server.py` now runs `claude-opus-4-8` across all 6 generation calls. Opus is the top-tier model: best output quality, but roughly 5x the per-token cost of Sonnet. Prompt caching still applies, so repeat generations within the 5-minute window stay cheap. The undeployed `server.js` twin is also on `claude-opus-4-8` for consistency. Test one generation per client after any future model change before flipping for real.
 
 ---
 

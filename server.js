@@ -50,7 +50,7 @@ app.post('/api/inspire', async (req, res) => {
     }
 
     const response = await client.messages.create({
-      model: 'claude-opus-4-6',
+      model: 'claude-opus-4-8',
       max_tokens: 2000,
       system: 'You are a Creative Director story angle generator. Return ONLY valid JSON arrays, no markdown fences, no explanation.',
       messages: [{
@@ -143,7 +143,7 @@ Return a JSON array with exactly ${slidePlan.length} slides:
     sendEvent({ type: 'start', total: slidePlan.length });
 
     const stream = client.messages.stream({
-      model: 'claude-opus-4-6',
+      model: 'claude-opus-4-8',
       max_tokens: 4000,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: userPrompt }]
