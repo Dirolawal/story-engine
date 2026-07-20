@@ -316,7 +316,7 @@ def inspire():
 
     try:
         response = client.messages.create(
-            model='claude-sonnet-4-20250514',
+            model='claude-sonnet-5',
             max_tokens=1000,
             system=system_blocks,
             messages=[{'role': 'user', 'content': user_prompt}],
@@ -387,7 +387,7 @@ def generate():
         try:
             yield f"data: {json.dumps({'type': 'start', 'total': len(plan)})}\n\n"
             with client.messages.stream(
-                model='claude-sonnet-4-20250514',
+                model='claude-sonnet-5',
                 max_tokens=1500,
                 system=system_blocks,
                 messages=[{'role': 'user', 'content': user_prompt}],
@@ -422,7 +422,7 @@ def highlight():
         return jsonify({'error': 'Text is required'}), 400
     try:
         response = client.messages.create(
-            model='claude-sonnet-4-20250514',
+            model='claude-sonnet-5',
             max_tokens=200,
             messages=[{
                 'role': 'user',
@@ -458,7 +458,7 @@ def translate():
         return jsonify({'slides': slides})
     try:
         response = client.messages.create(
-            model='claude-sonnet-4-20250514',
+            model='claude-sonnet-5',
             max_tokens=2000,
             system=build_system_message(request.client_context, niche),
             messages=[{
@@ -493,7 +493,7 @@ def voice():
         return jsonify({'error': 'Text is required'}), 400
     try:
         response = client.messages.create(
-            model='claude-sonnet-4-20250514',
+            model='claude-sonnet-5',
             max_tokens=600,
             messages=[{
                 'role': 'user',
@@ -529,7 +529,7 @@ def research():
     topic_clause = f' related to: {topic}' if topic else ''
     try:
         response = client.messages.create(
-            model='claude-sonnet-4-20250514',
+            model='claude-sonnet-5',
             max_tokens=1200,
             tools=[{'type': 'web_search_20250305', 'name': 'web_search', 'max_uses': 3}],
             messages=[{
